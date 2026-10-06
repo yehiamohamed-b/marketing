@@ -483,7 +483,7 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
 
     // the great eye: a finer shell so the eye reads clearly
     const ms = 0.36, ml = []; V.moonN = [];
-    for (let x = -MR; x <= MR; x += ms) for (let y = -MR; y <= MR; y += ms) for (let z = -1; z <= MR; z += ms) {
+    for (let x = -MR; x <= MR + ms * 0.5; x += ms) for (let y = -MR; y <= MR + ms * 0.5; y += ms) for (let z = -1; z <= MR + ms * 0.5; z += ms) {
       const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - MR) < ms * 0.55) { ml.push([MOON.x + x, MOON.y + y, MOON.z + z, '#cccccc', ms * 1.02]); V.moonN.push([x / d, y / d, z / d, rnd(), Math.sin(x * 2.3 + y * 1.7), d]); }
     }
     V.moon = voxSet(ml, true);
@@ -540,7 +540,7 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
     V.bg = [[-62, 30, -140, 4.5], [70, 22, -150, 5], [-40, -4, -118, 3.2], [48, -10, -124, 3.6], [-92, 6, -168, 4], [22, 42, -172, 3.8], [98, 46, -182, 4.2], [-20, 60, -200, 5]]
       .map(([x, y, z, R]) => ({ x, y, z, R: R * 1.6, seed: rnd() * TAU, off: rnd() }));
     const sh = []; V.bgCells = [];
-    V.bg.forEach((e, ei) => { const vs = 0.7; for (let x = -e.R; x <= e.R; x += vs) for (let y = -e.R; y <= e.R; y += vs) for (let z = -e.R * 0.2; z <= e.R; z += vs) { const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - e.R) < vs * 0.55) { sh.push([0, 0, 0, '#888888', vs * 1.03]); V.bgCells.push({ ei, n: [x / d, y / d, z / d], d, nz: rnd() }); } } });
+    V.bg.forEach((e, ei) => { const vs = 0.7; for (let x = -e.R; x <= e.R + vs * 0.5; x += vs) for (let y = -e.R; y <= e.R + vs * 0.5; y += vs) for (let z = -e.R * 0.2; z <= e.R + vs * 0.5; z += vs) { const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - e.R) < vs * 0.55) { sh.push([0, 0, 0, '#888888', vs * 1.03]); V.bgCells.push({ ei, n: [x / d, y / d, z / d], d, nz: rnd() }); } } });
     V.bgShell = voxSet(sh, true);
     V.bgTent = []; V.bg.forEach((e, ei) => { for (let j = 0; j < 7; j++) for (let k = 0; k < 26; k++) V.bgTent.push({ ei, j, k, a: -Math.PI / 2 + (j - 3) * 0.3 }); });
     V.bgTentM = voxSet(V.bgTent.map(c => [0, 0, 0, c.k > 21 ? '#9a3a4a' : pal(['#3a1a2e', '#2a1424', '#4a2034']), 0.8 * (1.3 - c.k / 26)]), true);

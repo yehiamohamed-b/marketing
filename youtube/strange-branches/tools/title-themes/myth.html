@@ -200,7 +200,7 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
   // sphere shell of voxels; cells carry the unit normal so themes can paint eyes, skulls, wrinkles...
   function shell(cx, cy, cz, R, vs, opt) {
     opt = opt || {}; const cells = [], sy = opt.sy || 1, zmin = opt.zmin == null ? -R * 0.15 : opt.zmin;
-    for (let x = -R; x <= R; x += vs) for (let y = -R; y <= R; y += vs) for (let z = zmin; z <= R; z += vs) {
+    for (let x = -R; x <= R + vs * 0.5; x += vs) for (let y = -R; y <= R + vs * 0.5; y += vs) for (let z = zmin; z <= R + vs * 0.5; z += vs) { // tolerance: float drift must not skip the front pole layer
       const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - R) < vs * 0.55) cells.push({ n: [x / d, y / d, z / d], d, nz: rnd(), w: Math.sin(x * 2.3 + y * 1.7) });
     }
     const dm = dyn(cells.length, false, opt.parent);
