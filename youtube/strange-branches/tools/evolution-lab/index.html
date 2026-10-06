@@ -93,6 +93,34 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
 .specimen .empty { color: var(--muted); font-family: var(--body); font-size: 13px; line-height: 1.45; }
 .bar { height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--bone); }
+.why { color: var(--bone); font-size: 13px; line-height: 1.45; margin: 8px 0 0; min-height: 3.6em; }
+.lbl { display: inline-flex; align-items: center; gap: 6px; }
+.info { width: 18px; height: 18px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center; font: 600 11px var(--mono); color: var(--muted); text-align: center; line-height: 1; }
+.info:hover { color: var(--bone); }
+.transport .info { flex: 0 0 18px; align-self: center; }
+.guide { margin-left: 10px; font-size: 12px; padding: 5px 10px; }
+.stage.aiming canvas { cursor: crosshair; }
+.toast { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); background: rgba(15,29,26,.85); border: 1px solid var(--ember); color: var(--bone); font: 600 clamp(12px, 1.3vw, 18px) var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: .5em 1em; border-radius: 4px; pointer-events: none; }
+.toast[hidden] { display: none; }
+.aimhint { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); font: 12px var(--mono); color: var(--bone); background: rgba(0,0,0,.5); padding: 6px 10px; border-radius: 4px; pointer-events: none; }
+.aimhint[hidden] { display: none; }
+#astBtn[aria-pressed="true"] { background: var(--ember); color: #1a0d05; border-color: var(--ember); }
+/* Tutorial */
+.dim { position: fixed; inset: 0; background: rgba(5,10,8,.45); z-index: 30; }
+.dim[hidden] { display: none; }
+.spot { position: relative; z-index: 40; outline: 2px solid var(--ember); outline-offset: 4px; border-radius: 6px; }
+.tip { position: fixed; z-index: 50; width: min(360px, calc(100vw - 32px)); background: var(--bone); color: var(--ink); border-radius: 6px; padding: 16px 18px 14px; box-shadow: 0 12px 40px rgba(0,0,0,.45); display: grid; gap: 8px; }
+.tip[hidden] { display: none; }
+.tip .step { font: 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: #5b6b62; }
+.tip h3 { margin: 0; font: 600 20px var(--display); font-variation-settings: "WONK" 1; text-wrap: balance; }
+.tip p, .tip li { margin: 0; font-size: 13.5px; line-height: 1.5; }
+.tip ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.tip b { font-weight: 600; }
+.tip .nav { display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px; }
+.tip .nav button { color: var(--ink); border-color: #b9b19c; text-align: center; }
+.tip .nav button:hover { border-color: var(--ink); }
+.tip .nav .next { background: var(--ink); color: var(--bone); border-color: var(--ink); }
+.tip .nav .skip { margin-right: auto; }
 .note { color: var(--muted); font-size: 12.5px; line-height: 1.5; max-width: 70ch; }
 @media (prefers-reduced-motion: reduce) { .exit { transition: none; } }
 </style>
@@ -101,6 +129,7 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
   <header>
     <div class="mark">Strange <em>Branches</em></div>
     <div class="sub">Evolution Lab · natural selection in a dish</div>
+    <button class="guide" id="guideBtn" title="Walk through every control">How it works</button>
     <div class="credit">Inspired by Primer &amp; <a href="https://labs.minutelabs.io/evolution-simulator/" target="_blank" rel="noopener">MinuteLabs.io</a></div>
   </header>
 
@@ -108,6 +137,8 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     <div class="stage" id="stage">
       <canvas id="field" aria-label="3D simulation field: creatures eat food, hunt and evolve. Drag to orbit, scroll to zoom, click a creature to inspect it."></canvas>
       <div class="extinct" id="extinct" hidden>Extinct.</div>
+      <div class="toast" id="toast" hidden></div>
+      <div class="aimhint" id="aimhint" hidden>Click the field to drop the asteroid · Esc to cancel</div>
       <div class="hud" aria-hidden="true">
         <div class="tl">Strange <em>Branches</em></div>
         <div class="tr"><span id="hudPreset">Earth as usual</span>
@@ -125,13 +156,15 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     <aside class="rail">
       <div class="transport">
         <button class="go" id="play">Pause</button>
-        <button id="stepBtn">Step</button>
+        <button id="stepBtn" title="Advance 10 ticks. Use it while paused to go frame by frame.">Step ahead</button>
         <button id="reset">Restart</button>
+        <button id="astBtn" aria-pressed="false" title="Aim an asteroid strike, then click the field (A)">Asteroid</button>
         <button id="rec" title="Clean 16:9 view for screen recording (R)">Recording view</button>
+        <button class="info" data-tip="transport" aria-label="What do these buttons do?">?</button>
       </div>
 
       <div>
-        <div class="label" style="margin-bottom:6px">Camera</div>
+        <div class="label lbl" style="margin-bottom:6px">Camera <button class="info" data-tip="cams" aria-label="About the camera">?</button></div>
         <div class="cams" id="cams">
           <button data-cam="wide" aria-pressed="true">Wide</button>
           <button data-cam="low">Low angle</button>
@@ -143,22 +176,29 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
       </div>
 
       <div>
-        <div class="label" style="margin-bottom:6px">World</div>
+        <div class="label lbl" style="margin-bottom:6px">World <button class="info" data-tip="worlds" aria-label="About the worlds">?</button></div>
         <div class="presets" id="presets"></div>
+        <p class="why" id="why"></p>
       </div>
 
-      <div class="row"><span class="label">Speed</span><output id="spdOut"></output>
+      <div class="row" id="row_spd"><span class="label lbl">Speed <button class="info" data-tip="spd" aria-label="What does Speed do?">?</button></span><output id="spdOut"></output>
         <input type="range" id="spd" min="1" max="20" step="1" value="2"></div>
-      <div class="row"><span class="label">Food per tick</span><output id="foodOut"></output>
+      <div class="row" id="row_food"><span class="label lbl">Food per tick <button class="info" data-tip="food" aria-label="What does Food per tick do?">?</button></span><output id="foodOut"></output>
         <input type="range" id="food" min="0.05" max="2" step="0.05" value="0.6">
         <small>How fast plants regrow. Lower it to starve the world.</small></div>
-      <div class="row"><span class="label">Mutation</span><output id="mutOut"></output>
+      <div class="row" id="row_mut"><span class="label lbl">Mutation <button class="info" data-tip="mut" aria-label="What does Mutation do?">?</button></span><output id="mutOut"></output>
         <input type="range" id="mut" min="0" max="0.25" step="0.01" value="0.08">
         <small>How much a child's traits can differ from its parent.</small></div>
-      <div class="row"><span class="label">Diet floor</span><output id="floorOut"></output>
+      <div class="row" id="row_floor"><span class="label lbl">Diet floor <button class="info" data-tip="floor" aria-label="What does Diet floor do?">?</button></span><output id="floorOut"></output>
         <input type="range" id="floor" min="0" max="0.9" step="0.05" value="0">
         <small>The thumb on the scale: no newborn can be less carnivorous than this.</small></div>
-      <div class="row"><span class="label">Starting creatures</span><output id="startOut"></output>
+      <div class="row" id="row_seasons"><span class="label lbl">Seasons <button class="info" data-tip="seasons" aria-label="What does Seasons do?">?</button></span><output id="seasonsOut"></output>
+        <input type="range" id="seasons" min="0" max="1" step="0.05" value="0">
+        <small>How hard plant growth swings between summer and winter.</small></div>
+      <div class="row" id="row_cold"><span class="label lbl">Cold <button class="info" data-tip="cold" aria-label="What does Cold do?">?</button></span><output id="coldOut"></output>
+        <input type="range" id="cold" min="0" max="2" step="0.1" value="0">
+        <small>Heat loss. Small bodies pay more to stay warm.</small></div>
+      <div class="row" id="row_start"><span class="label lbl">Starting creatures <button class="info" data-tip="start" aria-label="What does Starting creatures do?">?</button></span><output id="startOut"></output>
         <input type="range" id="start" min="10" max="200" step="5" value="70">
         <small>Applies on restart.</small></div>
 
@@ -168,14 +208,14 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
         <label><input type="checkbox" id="tEyes" checked> Eyes</label>
         <label><input type="checkbox" id="tShadow" checked> Shadows</label>
       </div>
-      <div class="seed"><span class="label">Seed</span><input id="seed" inputmode="numeric" value="1" aria-label="Random seed"><button id="reseed" title="New random seed">Shuffle</button></div>
-      <p class="note">Drag to orbit, right-drag to pan, scroll to zoom. Click a creature to inspect it, then press Follow for a tracking shot. Same seed and settings give the same run, so you can retake a shot. Keys: Space pause, R recording view, O orbit, T follow, H overlay, F fullscreen.</p>
+      <div class="seed" id="seedRow"><span class="label lbl">Seed <button class="info" data-tip="seed" aria-label="What is the seed?">?</button></span><input id="seed" inputmode="numeric" value="1" aria-label="Random seed"><button id="reseed" title="New random seed">Shuffle</button></div>
+      <p class="note">Drag to orbit, right-drag to pan, scroll to zoom. Click a creature to inspect it, then press Follow for a tracking shot. Same seed and settings give the same run, so you can retake a shot. Keys: Space pause, A asteroid, R recording view, O orbit, T follow, H overlay, F fullscreen. New here? Press <b>How it works</b>.</p>
     </aside>
   </div>
 
   <div class="below">
     <section class="panel">
-      <div class="label">Population over time</div>
+      <div class="label lbl">Population over time <button class="info" data-tip="charts" aria-label="How to read the charts">?</button></div>
       <div class="counts">
         <div><b id="cGen">0</b>Generation</div>
         <div><b id="cPop">0</b>Alive</div>
@@ -195,6 +235,13 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
   </div>
 </div>
 <button class="exit" id="exitRec">Exit recording view (Esc)</button>
+<div class="dim" id="dim" hidden></div>
+<div class="tip" id="tip" role="dialog" aria-modal="false" aria-labelledby="tipTitle" hidden>
+  <div class="step" id="tipStep"></div>
+  <h3 id="tipTitle"></h3>
+  <div id="tipBody"></div>
+  <div class="nav"><button class="skip" id="tipSkip">Close</button><button id="tipBack">Back</button><button class="next" id="tipNext">Next</button></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -214,7 +261,8 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
   const dietColor = d => `rgb(${dietRGB(d).join(',')})`;
 
   let presetKey = 'earth', world, running = true, selected = null;
-  const settings = { food: 0.6, mut: 0.08, floor: 0, start: 70 };
+  const settings = { food: 0.6, mut: 0.08, floor: 0, start: 70, seasons: 0, cold: 0 };
+  const LIVE = ['food', 'mut', 'floor', 'seasons', 'cold'];
 
   // Presets
   const pBox = $('presets');
@@ -228,7 +276,7 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     presetKey = k;
     [...pBox.children].forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
     const p = P[k];
-    settings.food = p.food; settings.mut = p.mut; settings.floor = p.floor; settings.start = p.start;
+    for (const k of [...LIVE, 'start']) settings[k] = p[k];
     syncInputs(); restart();
   }
 
@@ -237,11 +285,13 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     world = new SBWorld(Object.assign({}, P[presetKey], settings, { seed }));
     selected = null; anim.clear(); renderSpecimen();
     $('hudPreset').textContent = P[presetKey].label;
+    $('why').textContent = P[presetKey].why;
+    seenEvents = 0; clearFx();
   }
 
   // Sliders
-  const fmt = { food: v => v.toFixed(2), mut: v => Math.round(v * 100) + '%', floor: v => Math.round(v * 100) + '%', start: v => v, spd: v => '×' + v };
-  ['food', 'mut', 'floor', 'start', 'spd'].forEach(id => {
+  const fmt = { food: v => v.toFixed(2), mut: v => Math.round(v * 100) + '%', floor: v => Math.round(v * 100) + '%', start: v => v, spd: v => '×' + v, seasons: v => Math.round(v * 100) + '%', cold: v => v.toFixed(1) };
+  [...LIVE, 'start', 'spd'].forEach(id => {
     $(id).addEventListener('input', () => {
       const v = parseFloat($(id).value);
       $(id + 'Out').textContent = fmt[id](v);
@@ -249,7 +299,7 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     });
   });
   function syncInputs() {
-    ['food', 'mut', 'floor', 'start'].forEach(id => { $(id).value = settings[id]; $(id + 'Out').textContent = fmt[id](settings[id]); });
+    [...LIVE, 'start'].forEach(id => { $(id).value = settings[id]; $(id + 'Out').textContent = fmt[id](settings[id]); });
     $('spdOut').textContent = fmt.spd(+$('spd').value);
   }
 
@@ -411,7 +461,8 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     if (e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox') return;
     if (e.code === 'Space') { e.preventDefault(); setRunning(!running); }
     else if (e.key === 'r' || e.key === 'R') setRec(!document.body.classList.contains('rec'));
-    else if (e.key === 'Escape') setRec(false);
+    else if (e.key === 'Escape') { if (aiming) setAim(false); else if (!$('tip').hidden) endTour(); else setRec(false); }
+    else if (e.key === 'a' || e.key === 'A') setAim(!aiming);
     else if (e.key === 'o' || e.key === 'O') setOrbit(!controls.autoRotate);
     else if (e.key === 't' || e.key === 'T') setFollow(!follow);
     else if (e.key === 'h' || e.key === 'H') setHud(document.body.classList.contains('clean'));
@@ -440,6 +491,14 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     const r = cv.getBoundingClientRect();
     ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
+    if (aiming) {
+      const p = new THREE.Vector3();
+      if (ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p) && Math.abs(p.x) < 8.2 && Math.abs(p.z) < 4.7) {
+        world.strike(p.x / S + W / 2, p.z / S + H / 2);
+        setAim(false);
+      }
+      return;
+    }
     const hit = ray.intersectObject(bodies)[0];
     if (hit && drawn[hit.instanceId]) selected = drawn[hit.instanceId];
     else {
@@ -537,6 +596,43 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     $('extinct').hidden = list.length > 0;
   }
 
+  // ---------- Asteroid effects ----------
+  let aiming = false, seenEvents = 0, toastT = 0;
+  const fx = [];
+  function setAim(on) { aiming = on; $('astBtn').setAttribute('aria-pressed', on); $('stage').classList.toggle('aiming', on); $('aimhint').hidden = !on; }
+  $('astBtn').onclick = () => setAim(!aiming);
+  const meteorMat = new THREE.MeshBasicMaterial({ color: L(COL.ember) });
+  const meteorGeo = new THREE.IcosahedronGeometry(1, 1);
+  const waveGeo = new THREE.RingGeometry(0.9, 1, 64).rotateX(-Math.PI / 2);
+  const scorchGeo = new THREE.CircleGeometry(1, 48).rotateX(-Math.PI / 2);
+  function clearFx() { for (const f of fx) for (const m of f.meshes) { scene.remove(m); m.material !== meteorMat && m.material.dispose(); } fx.length = 0; }
+  function spawnStrike(ev) {
+    const x = toX(ev.x), z = toZ(ev.y), R = ev.R * S;
+    const rock = new THREE.Mesh(meteorGeo, meteorMat); rock.scale.setScalar(0.35);
+    const wave = new THREE.Mesh(waveGeo, new THREE.MeshBasicMaterial({ color: L(COL.ember), transparent: true, opacity: 0, depthWrite: false }));
+    const scorch = new THREE.Mesh(scorchGeo, new THREE.MeshBasicMaterial({ color: L('#0b0806'), transparent: true, opacity: 0, depthWrite: false }));
+    wave.position.set(x, 0.02, z); scorch.position.set(x, 0.006, z); scorch.scale.setScalar(R);
+    scene.add(rock, wave, scorch);
+    fx.push({ x, z, R, t: reduced ? 0.7 : 0, meshes: [rock, wave, scorch], rock, wave, scorch });
+    toast(`Asteroid impact · ${ev.dead} creatures lost · radiation rising`);
+  }
+  function toast(msg) { $('toast').textContent = msg; $('toast').hidden = false; toastT = 3.5; }
+  function updateFx(dt) {
+    while (seenEvents < world.events.length) spawnStrike(world.events[seenEvents++]);
+    for (let i = fx.length - 1; i >= 0; i--) {
+      const f = fx[i]; f.t += dt;
+      const fall = Math.min(1, f.t / 0.7);
+      f.rock.visible = fall < 1;
+      f.rock.position.set(f.x + 4 * (1 - fall), 0.2 + 12 * (1 - fall), f.z - 3 * (1 - fall));
+      const k = Math.max(0, f.t - 0.7);
+      f.wave.scale.setScalar(Math.max(0.01, f.R * Math.min(1.6, k * 2.2)));
+      f.wave.material.opacity = k > 0 ? Math.max(0, 0.9 - k * 0.8) : 0;
+      f.scorch.material.opacity = k > 0 ? Math.max(0, 0.7 - Math.max(0, k - 2) * 0.06) : 0;
+      if (k > 14) { for (const m of f.meshes) { scene.remove(m); m.material !== meteorMat && m.material.dispose(); } fx.splice(i, 1); }
+    }
+    if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').hidden = true; }
+  }
+
   function updateCamera(dt) {
     if (shot) {
       shot.t = Math.min(1, shot.t + dt * 1.2);
@@ -603,7 +699,7 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
     if (!selected) { el.innerHTML = '<p class="empty">Click a creature in the field to read its traits, diet and lineage.</p>'; return; }
     const b = selected;
     const kind = b.d < 0.33 ? 'Grazer' : b.d < 0.66 ? 'Omnivore' : 'Hunter';
-    const fate = b.alive ? b.mode : (b.killedBy ? 'eaten by #' + b.killedBy : 'died (starved or old age)');
+    const fate = b.alive ? b.mode : (b.killedBy === 'asteroid' ? 'killed by the asteroid' : b.killedBy ? 'eaten by #' + b.killedBy : 'died (starved or old age)');
     const bar = (v, max) => `<div class="bar"><i style="width:${Math.min(100, v / max * 100)}%;background:${dietColor(b.d)}"></i></div>`;
     el.innerHTML = `<div class="nm">Creature #${b.id}</div>
       <div>${kind} · generation ${b.gen} · ${fate}</div>
@@ -613,11 +709,78 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
       <div>Meat in diet ${Math.round(b.d * 100)}%</div>${bar(b.d, 1)}`;
   }
 
+  // ---------- Tutorial: guided tour + "?" help on every control ----------
+  const TIPS = {
+    welcome: ['#stage', 'Welcome to the Evolution Lab', `<p>Every creature here carries four genes: <b>size</b>, <b>speed</b>, <b>senses</b> and <b>diet</b>. Creatures that collect energy fastest have the most children, and each child copies its parent's genes with small random changes.</p><p>Nobody tells them what to become. You set the world; selection does the rest.</p>`],
+    field: ['#stage', 'Reading the field', `<ul><li><b>Colour is diet:</b> green grazers eat plants, gold omnivores eat both, orange hunters eat other creatures.</li><li><b>Angry brows</b> mark hunters. An <b>orange ring</b> under a creature means it is chasing something right now.</li><li>Small green crystals are plants.</li><li><b>Drag</b> to orbit, <b>right-drag</b> to pan, <b>scroll</b> to zoom. <b>Click</b> a creature to inspect it.</li></ul>`],
+    rules: ['#stage', 'The energy rules (how everything connects)', `<ul><li>Every creature has an <b>energy tank</b>. It dies when the tank is empty, or of old age.</li><li><b>Moving costs size³ × speed²</b>, so a creature twice as big and twice as fast burns about 32× the energy. This is the central trade-off.</li><li><b>Senses</b> cost a little extra, all the time. Standing still and waiting is cheap.</li><li>A hunter can only eat creatures at least <b>20% smaller</b> than itself. Meat is worth more than plants.</li><li>With <b>twice its birth cost</b> in the tank, a creature has a child.</li></ul><p>Every slider just changes one of these numbers. Then you watch which bodies win.</p>`],
+    transport: ['.transport', 'Running the experiment', `<ul><li><b>Pause / Play</b> (Space).</li><li><b>Step ahead</b> moves 10 ticks at a time, for frame-by-frame filming while paused.</li><li><b>Restart</b> replays from the start with the same seed and settings.</li><li><b>Asteroid</b> (A): aim, then click the field. Everything in the blast dies, plants burn, and radiation raises mutation for a while.</li><li><b>Recording view</b> (R) fills the screen in 16:9 for screen capture.</li></ul>`],
+    cams: ['#cams', 'Camera', `<p><b>Wide</b>, <b>Low angle</b> and <b>Top down</b> are preset shots. <b>Orbit</b> slowly circles the field for b-roll. Click a creature, then <b>Follow</b> to track it. <b>Overlay</b> shows or hides the stats text in recording view.</p>`],
+    worlds: ['#presets', 'Worlds', `<p>Each world is the <b>same rules</b> with different starting conditions, and each asks one question. The question appears under the buttons when you pick a world.</p><p>Picking a world resets the sliders to its values. You can then change any slider while it runs.</p>`],
+    spd: ['#row_spd', 'Speed', `<p>How many simulation ticks run per frame. It doesn't change the outcome, only how fast you get there. Use ×10 or more to see evolution, and ×1–2 to film behaviour.</p>`],
+    food: ['#row_food', 'Food per tick', `<p>How fast plants grow back. This sets how many creatures the world can feed.</p><ul><li><b>More food:</b> bigger populations and weaker selection. Size and speed matter less.</li><li><b>Less food:</b> fewer creatures and harsher selection. Small, slow, efficient bodies win, because size³ × speed² gets too expensive.</li><li>Hunters depend on grazers, so starving the plants eventually starves the hunters too.</li></ul>`],
+    mut: ['#row_mut', 'Mutation', `<p>How different a child can be from its parent.</p><ul><li><b>Low:</b> slow, steady change. Populations settle into a stable shape.</li><li><b>High:</b> fast change and more variety, but also more misfit children who die young.</li><li>The asteroid's radiation temporarily adds to this.</li></ul>`],
+    floor: ['#row_floor', 'Diet floor', `<p>Forces evolution's hand: no newborn can eat less meat than this. At 60% or more, nobody can be a pure grazer. This is how the <b>All-predator world</b> works.</p><p>Watch what happens to population size. Energy is lost at each step up the food chain, so a world of hunters supports far fewer creatures.</p>`],
+    seasons: ['#row_seasons', 'Seasons', `<p>Makes plant growth rise and fall in a cycle. At 0% food is steady. At 100% winters have almost nothing.</p><p>Seasons favour creatures that can survive lean times: cheaper bodies, and hunters that eat the weak when plants run out. Look for waves in the population chart.</p>`],
+    cold: ['#row_cold', 'Cold', `<p>Adds a heat-loss cost that hits <b>small bodies hardest</b>, because they have more surface for their volume.</p><p>This pushes average size <b>up</b>, while movement costs push it <b>down</b>. Where those balance is the creature's best size. Real mammals show the same pattern (Bergmann's rule).</p>`],
+    start: ['#row_start', 'Starting creatures', `<p>How many creatures the run begins with. Too few, and bad luck can wipe them out early. Too many, and the first generations starve while competing for food. Applies on restart.</p>`],
+    seed: ['#seedRow', 'Seed', `<p>The random seed. The same seed and settings give the exact same run, so you can retake a shot. <b>Shuffle</b> rolls a new world. Always try a few seeds before you trust a result.</p>`],
+    charts: ['.below', 'Reading the charts', `<ul><li><b>Population over time:</b> stacked by diet, with grazers at the bottom and hunters on top. Waves mean predator–prey cycles.</li><li><b>Average traits:</b> how size, speed, senses and diet are drifting. A steady line climbing over time is selection at work.</li><li><b>Specimen:</b> click any creature to read its genes and generation.</li></ul>`],
+    tryit: ['#presets', 'Try this first', `<p>Run <b>Earth as usual</b> at ×10 for a minute and note the average size. Then pick <b>Ice age</b> with the same seed and compare.</p><p>The only difference between the two runs is the cold, so any difference in size is caused by it. That's the whole method, and it's how each video's experiment should be set up.</p>`],
+  };
+  const TOUR = ['welcome', 'field', 'rules', 'transport', 'cams', 'worlds', 'spd', 'food', 'mut', 'floor', 'seasons', 'cold', 'start', 'seed', 'charts', 'tryit'];
+  let tour = null, spotEl = null;
+  function showTip(key, idx) {
+    const [sel, title, body] = TIPS[key];
+    const target = document.querySelector(sel);
+    if (spotEl) spotEl.classList.remove('spot');
+    spotEl = target; target && target.classList.add('spot');
+    $('tipTitle').textContent = title; $('tipBody').innerHTML = body;
+    const inTour = idx != null;
+    $('tipStep').textContent = inTour ? `Step ${idx + 1} of ${TOUR.length}` : 'Help';
+    $('tipBack').hidden = !inTour || idx === 0;
+    $('tipNext').hidden = !inTour;
+    $('tipNext').textContent = inTour && idx === TOUR.length - 1 ? 'Done' : 'Next';
+    $('tipSkip').textContent = inTour && idx < TOUR.length - 1 ? 'Skip tour' : 'Close';
+    $('dim').hidden = false; $('tip').hidden = false;
+    target && target.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+    requestAnimationFrame(() => placeTip(target));
+    $('tipNext').hidden ? $('tipSkip').focus() : $('tipNext').focus();
+  }
+  function placeTip(target) {
+    const tip = $('tip'), tw = tip.offsetWidth, th = tip.offsetHeight, vw = innerWidth, vh = innerHeight, m = 16;
+    let x = (vw - tw) / 2, y = vh - th - m;
+    if (target && vw > 700) {
+      const r = target.getBoundingClientRect();
+      if (r.right + 14 + tw < vw - m) { x = r.right + 14; y = r.top; }
+      else if (r.left - 14 - tw > m) { x = r.left - 14 - tw; y = r.top; }
+      else if (r.bottom + 14 + th < vh - m) { x = r.left; y = r.bottom + 14; }
+      else if (r.top - 14 - th > m) { x = r.left; y = r.top - 14 - th; }
+      else { x = r.left + 20; y = r.top + 20; }
+    }
+    tip.style.left = Math.max(m, Math.min(x, vw - tw - m)) + 'px';
+    tip.style.top = Math.max(m, Math.min(y, vh - th - m)) + 'px';
+  }
+  function startTour() { if (document.body.classList.contains('rec')) setRec(false); tour = 0; showTip(TOUR[0], 0); }
+  function endTour() {
+    tour = null; $('tip').hidden = true; $('dim').hidden = true;
+    if (spotEl) spotEl.classList.remove('spot'); spotEl = null;
+    try { localStorage.setItem('sb-lab-tour', '1'); } catch (e) {}
+  }
+  $('tipNext').onclick = () => { if (tour === TOUR.length - 1) return endTour(); tour++; showTip(TOUR[tour], tour); };
+  $('tipBack').onclick = () => { if (tour > 0) { tour--; showTip(TOUR[tour], tour); } };
+  $('tipSkip').onclick = endTour;
+  $('dim').onclick = endTour;
+  $('guideBtn').onclick = startTour;
+  document.querySelectorAll('.info').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); tour = null; showTip(b.dataset.tip, null); }));
+  addEventListener('resize', () => { if (!$('tip').hidden) placeTip(spotEl); });
+  addEventListener('scroll', () => { if (!$('tip').hidden) placeTip(spotEl); }, { passive: true });
+
   let frame = 0, last = performance.now();
   function loop(now) {
     const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
     if (running && world.blobs.length) { const n = +$('spd').value; for (let i = 0; i < n; i++) world.step(); }
-    render3D(dt); updateCamera(dt);
+    render3D(dt); updateFx(dt); updateCamera(dt);
     renderer.render(scene, camera);
     if (frame++ % 6 === 0) {
       const s = world.stats();
@@ -634,5 +797,7 @@ button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border
   }
 
   syncInputs(); restart(); resize(); requestAnimationFrame(loop);
+  let seen = false; try { seen = localStorage.getItem('sb-lab-tour') === '1'; } catch (e) {}
+  if (!seen) setTimeout(startTour, 800);
 })();
 </script>
