@@ -1,0 +1,638 @@
+<title>Strange Branches Evolution Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..800,0..100,1;1,9..144,400..800,0..100,1&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a 16:9 3D field "plate" for recording, a specimen-label control rail beside it; one dark look, built for screen capture. */
+:root {
+  --ink: #0f1d1a;        /* page ground: bottle-green night */
+  --plate: #13251f;      /* the field */
+  --rail: #162b25;       /* control rail */
+  --line: #2a433b;
+  --bone: #ece4d0;       /* text, linework */
+  --muted: #9fb2a6;
+  --sage: #8fbf8a;       /* grazers */
+  --gold: #e6b84a;       /* omnivores */
+  --ember: #ff7a3d;      /* hunters, the strange branch */
+  --display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--bone); font-family: var(--body); font-size: 14px; }
+.wrap { padding-block: 18px 28px; padding-inline: 20px; max-width: 1500px; margin: 0 auto; display: grid; gap: 14px; }
+header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.mark { font-family: var(--display); font-weight: 700; font-size: 26px; letter-spacing: -0.01em; font-variation-settings: "SOFT" 50, "WONK" 1; }
+.mark em { font-style: italic; color: var(--ember); font-weight: 600; }
+.sub { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.credit { margin-left: auto; font-size: 12px; color: var(--muted); }
+.credit a { color: var(--muted); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
+@media (max-width: 980px) { .main { grid-template-columns: 1fr; } }
+
+.stage { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: var(--plate); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.stage canvas:active { cursor: grabbing; }
+.stage .extinct[hidden] { display: none; }
+.stage .extinct { position: absolute; inset: 0; display: grid; place-items: center; font: italic 600 clamp(28px, 5vw, 72px) var(--display); color: var(--bone); pointer-events: none; text-shadow: 0 2px 20px rgba(0,0,0,.6); }
+.stage .nogl { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+.hud { position: absolute; inset: 0; pointer-events: none; display: none; }
+.hud .tl { position: absolute; left: 2.2%; top: 3%; font-family: var(--display); font-weight: 700; font-size: clamp(14px, 2vw, 30px); font-variation-settings: "SOFT" 50, "WONK" 1; opacity: .9; text-shadow: 0 1px 12px rgba(0,0,0,.5); }
+.hud .tl em { font-style: italic; color: var(--ember); }
+.hud .bl { position: absolute; left: 2.2%; bottom: 3.5%; display: flex; gap: 2.2vw; font-family: var(--mono); font-size: clamp(11px, 1.15vw, 18px); letter-spacing: .06em; text-transform: uppercase; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
+.hud .bl b { display: block; font-family: var(--display); font-weight: 600; font-size: 2.1em; letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+.hud .tr { position: absolute; right: 2.2%; top: 3.5%; font-family: var(--mono); font-size: clamp(11px, 1.1vw, 17px); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: right; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
+.hud .key { display: flex; gap: 1.6vw; justify-content: flex-end; margin-top: .5em; }
+.dot { display: inline-block; width: .8em; height: .8em; border-radius: 50%; margin-right: .4em; vertical-align: -0.05em; }
+
+body.rec .wrap { max-width: none; padding: 0; height: 100%; display: block; }
+body.rec header, body.rec .rail, body.rec .below { display: none; }
+body.rec .main { display: flex; height: 100%; align-items: center; justify-content: center; background: #000; }
+body.rec .stage { width: min(100vw, 177.78vh); border: 0; border-radius: 0; }
+body.rec .hud { display: block; }
+body.rec.clean .hud { display: none; }
+.exit { position: fixed; right: 12px; bottom: 12px; display: none; font: 12px var(--mono); color: var(--muted); background: rgba(0,0,0,.4); padding: 6px 10px; border-radius: 4px; border: 1px solid var(--line); cursor: pointer; opacity: 0; transition: opacity .2s; }
+body.rec .exit { display: block; }
+body.rec .exit:hover, body.rec .exit:focus-visible { opacity: 1; }
+
+.rail { background: var(--rail); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 16px; }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.presets, .cams { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cams { grid-template-columns: repeat(3, 1fr); }
+button { font: 500 13px var(--body); color: var(--bone); background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; cursor: pointer; text-align: left; }
+.cams button { text-align: center; padding-inline: 6px; }
+button:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border-color: var(--bone); }
+.transport { display: flex; gap: 6px; flex-wrap: wrap; }
+.transport button { text-align: center; flex: 1 1 auto; }
+.transport .go { background: var(--ember); border-color: var(--ember); color: #1a0d05; font-weight: 600; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.row output { font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--bone); }
+.row input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--ember); }
+.row small { grid-column: 1 / -1; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.toggles { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.toggles label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.toggles input { accent-color: var(--ember); }
+.seed { display: flex; gap: 6px; align-items: center; }
+.seed input { width: 90px; font: 13px var(--mono); background: var(--ink); color: var(--bone); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; }
+
+.below { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.9fr); gap: 14px; }
+@media (max-width: 980px) { .below { grid-template-columns: 1fr; } }
+.panel { background: var(--rail); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.panel canvas { width: 100%; display: block; }
+.counts { display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.counts b { font: 600 20px var(--display); color: var(--bone); display: block; font-variant-numeric: tabular-nums; }
+.traits { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.trait { display: grid; gap: 2px; }
+.trait .v { font: 600 17px var(--display); font-variant-numeric: tabular-nums; }
+.specimen { font-family: var(--mono); font-size: 12px; line-height: 1.7; }
+.specimen .nm { font: italic 600 19px var(--display); font-variation-settings: "WONK" 1; }
+.specimen .empty { color: var(--muted); font-family: var(--body); font-size: 13px; line-height: 1.45; }
+.bar { height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--bone); }
+.note { color: var(--muted); font-size: 12.5px; line-height: 1.5; max-width: 70ch; }
+@media (prefers-reduced-motion: reduce) { .exit { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="mark">Strange <em>Branches</em></div>
+    <div class="sub">Evolution Lab · natural selection in a dish</div>
+    <div class="credit">Inspired by Primer &amp; <a href="https://labs.minutelabs.io/evolution-simulator/" target="_blank" rel="noopener">MinuteLabs.io</a></div>
+  </header>
+
+  <div class="main">
+    <div class="stage" id="stage">
+      <canvas id="field" aria-label="3D simulation field: creatures eat food, hunt and evolve. Drag to orbit, scroll to zoom, click a creature to inspect it."></canvas>
+      <div class="extinct" id="extinct" hidden>Extinct.</div>
+      <div class="hud" aria-hidden="true">
+        <div class="tl">Strange <em>Branches</em></div>
+        <div class="tr"><span id="hudPreset">Earth as usual</span>
+          <div class="key"><span><i class="dot" style="background:var(--sage)"></i>Grazer</span><span><i class="dot" style="background:var(--gold)"></i>Omnivore</span><span><i class="dot" style="background:var(--ember)"></i>Hunter</span></div>
+        </div>
+        <div class="bl">
+          <div>Generation<b id="hudGen">0</b></div>
+          <div>Alive<b id="hudPop">0</b></div>
+          <div>Hunters<b id="hudCarn">0</b></div>
+          <div>Kills<b id="hudKills">0</b></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <div class="transport">
+        <button class="go" id="play">Pause</button>
+        <button id="stepBtn">Step</button>
+        <button id="reset">Restart</button>
+        <button id="rec" title="Clean 16:9 view for screen recording (R)">Recording view</button>
+      </div>
+
+      <div>
+        <div class="label" style="margin-bottom:6px">Camera</div>
+        <div class="cams" id="cams">
+          <button data-cam="wide" aria-pressed="true">Wide</button>
+          <button data-cam="low">Low angle</button>
+          <button data-cam="top">Top down</button>
+          <button id="orbitBtn" aria-pressed="false" title="Slow cinematic orbit (O)">Orbit</button>
+          <button id="followBtn" aria-pressed="false" title="Camera follows the selected creature (T)">Follow</button>
+          <button id="hudBtn" aria-pressed="true" title="Show stats overlay in recording view (H)">Overlay</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="label" style="margin-bottom:6px">World</div>
+        <div class="presets" id="presets"></div>
+      </div>
+
+      <div class="row"><span class="label">Speed</span><output id="spdOut"></output>
+        <input type="range" id="spd" min="1" max="20" step="1" value="2"></div>
+      <div class="row"><span class="label">Food per tick</span><output id="foodOut"></output>
+        <input type="range" id="food" min="0.05" max="2" step="0.05" value="0.6">
+        <small>How fast plants regrow. Lower it to starve the world.</small></div>
+      <div class="row"><span class="label">Mutation</span><output id="mutOut"></output>
+        <input type="range" id="mut" min="0" max="0.25" step="0.01" value="0.08">
+        <small>How much a child's traits can differ from its parent.</small></div>
+      <div class="row"><span class="label">Diet floor</span><output id="floorOut"></output>
+        <input type="range" id="floor" min="0" max="0.9" step="0.05" value="0">
+        <small>The thumb on the scale: no newborn can be less carnivorous than this.</small></div>
+      <div class="row"><span class="label">Starting creatures</span><output id="startOut"></output>
+        <input type="range" id="start" min="10" max="200" step="5" value="70">
+        <small>Applies on restart.</small></div>
+
+      <div class="toggles">
+        <label><input type="checkbox" id="tSense"> Sense rings</label>
+        <label><input type="checkbox" id="tFood" checked> Food</label>
+        <label><input type="checkbox" id="tEyes" checked> Eyes</label>
+        <label><input type="checkbox" id="tShadow" checked> Shadows</label>
+      </div>
+      <div class="seed"><span class="label">Seed</span><input id="seed" inputmode="numeric" value="1" aria-label="Random seed"><button id="reseed" title="New random seed">Shuffle</button></div>
+      <p class="note">Drag to orbit, right-drag to pan, scroll to zoom. Click a creature to inspect it, then press Follow for a tracking shot. Same seed and settings give the same run, so you can retake a shot. Keys: Space pause, R recording view, O orbit, T follow, H overlay, F fullscreen.</p>
+    </aside>
+  </div>
+
+  <div class="below">
+    <section class="panel">
+      <div class="label">Population over time</div>
+      <div class="counts">
+        <div><b id="cGen">0</b>Generation</div>
+        <div><b id="cPop">0</b>Alive</div>
+        <div><b id="cBirths">0</b>Births</div>
+        <div><b id="cKills">0</b>Kills</div>
+      </div>
+      <canvas id="popChart" height="150"></canvas>
+    </section>
+    <section class="panel">
+      <div class="label">Average traits</div>
+      <div class="traits" id="traits"></div>
+    </section>
+    <section class="panel">
+      <div class="label">Specimen</div>
+      <div class="specimen" id="specimen"><p class="empty">Click a creature in the field to read its traits, diet and lineage.</p></div>
+    </section>
+  </div>
+</div>
+<button class="exit" id="exitRec">Exit recording view (Esc)</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="core.js"></script>
+<script>
+(function () {
+  const W = SBWorld.W, H = SBWorld.H, P = SBWorld.PRESETS;
+  const $ = id => document.getElementById(id);
+  const css = getComputedStyle(document.documentElement);
+  const C = k => css.getPropertyValue('--' + k).trim();
+  const COL = { sage: C('sage'), gold: C('gold'), ember: C('ember'), bone: C('bone'), muted: C('muted'), line: C('line'), plate: C('plate'), ink: C('ink') };
+  const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const mixArr = (a, b, t) => { const A = hex(a), B = hex(b); return A.map((v, i) => Math.round(v + (B[i] - v) * t)); };
+  const dietRGB = d => d < 0.5 ? mixArr(COL.sage, COL.gold, d / 0.5) : mixArr(COL.gold, COL.ember, (d - 0.5) / 0.5);
+  const dietColor = d => `rgb(${dietRGB(d).join(',')})`;
+
+  let presetKey = 'earth', world, running = true, selected = null;
+  const settings = { food: 0.6, mut: 0.08, floor: 0, start: 70 };
+
+  // Presets
+  const pBox = $('presets');
+  Object.entries(P).forEach(([k, p]) => {
+    const b = document.createElement('button');
+    b.textContent = p.label; b.dataset.k = k; b.setAttribute('aria-pressed', k === presetKey);
+    b.onclick = () => applyPreset(k);
+    pBox.appendChild(b);
+  });
+  function applyPreset(k) {
+    presetKey = k;
+    [...pBox.children].forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
+    const p = P[k];
+    settings.food = p.food; settings.mut = p.mut; settings.floor = p.floor; settings.start = p.start;
+    syncInputs(); restart();
+  }
+
+  function restart() {
+    const seed = parseInt($('seed').value, 10) || 1;
+    world = new SBWorld(Object.assign({}, P[presetKey], settings, { seed }));
+    selected = null; anim.clear(); renderSpecimen();
+    $('hudPreset').textContent = P[presetKey].label;
+  }
+
+  // Sliders
+  const fmt = { food: v => v.toFixed(2), mut: v => Math.round(v * 100) + '%', floor: v => Math.round(v * 100) + '%', start: v => v, spd: v => '×' + v };
+  ['food', 'mut', 'floor', 'start', 'spd'].forEach(id => {
+    $(id).addEventListener('input', () => {
+      const v = parseFloat($(id).value);
+      $(id + 'Out').textContent = fmt[id](v);
+      if (id !== 'spd') { settings[id] = v; if (id !== 'start') world.cfg[id] = v; }
+    });
+  });
+  function syncInputs() {
+    ['food', 'mut', 'floor', 'start'].forEach(id => { $(id).value = settings[id]; $(id + 'Out').textContent = fmt[id](settings[id]); });
+    $('spdOut').textContent = fmt.spd(+$('spd').value);
+  }
+
+  // Transport
+  function setRunning(r) { running = r; $('play').textContent = r ? 'Pause' : 'Play'; }
+  $('play').onclick = () => setRunning(!running);
+  $('stepBtn').onclick = () => { setRunning(false); for (let i = 0; i < 10; i++) world.step(); };
+  $('reset').onclick = restart;
+  $('reseed').onclick = () => { $('seed').value = Math.floor(Math.random() * 99999) + 1; restart(); };
+  $('seed').addEventListener('change', restart);
+  function setRec(on) {
+    document.body.classList.toggle('rec', on);
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    requestAnimationFrame(resize);
+  }
+  $('rec').onclick = () => setRec(true);
+  $('exitRec').onclick = () => setRec(false);
+
+  // ---------- 3D scene ----------
+  const anim = new Map(); // per-creature animation state: hop phase, last position
+  const S = 0.01;         // sim units → world units (field is 16 × 9)
+  const toX = x => (x - W / 2) * S, toZ = y => (y - H / 2) * S;
+  const DRAW = 1.8;       // creatures drawn larger than their hitbox so they read on video
+
+  if (!window.THREE) {
+    $('stage').insertAdjacentHTML('beforeend', '<div class="nogl">The 3D engine did not load. Check your connection and reload the page.</div>');
+    return;
+  }
+  const cv = $('field');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); }
+  catch (e) { $('stage').insertAdjacentHTML('beforeend', '<div class="nogl">This browser could not start WebGL, which the 3D view needs.</div>'); return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.95;
+
+  const L = c => new THREE.Color(c).convertSRGBToLinear(); // author colours in sRGB
+  const scene = new THREE.Scene();
+  const skyCol = new THREE.Color(COL.ink);
+  scene.background = skyCol;
+  scene.fog = new THREE.Fog(skyCol, 22, 48);
+
+  const camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 200);
+  const controls = new THREE.OrbitControls(camera, cv);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+  controls.maxPolarAngle = Math.PI * 0.49; controls.minDistance = 2; controls.maxDistance = 40;
+  controls.autoRotateSpeed = 0.5;
+
+  // Lights: warm key sun, cool fill from the sky
+  scene.add(new THREE.HemisphereLight(0xcfe6d6, 0x1a2a20, 0.55));
+  const sun = new THREE.DirectionalLight(0xfff1d6, 1.15);
+  sun.position.set(6, 13, 6);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 8, bottom: -8, near: 1, far: 40 });
+  sun.shadow.bias = -0.0008; sun.shadow.radius = 4;
+  scene.add(sun);
+  const rim = new THREE.DirectionalLight(0x9fd8ff, 0.35); rim.position.set(-8, 5, -9); scene.add(rim);
+
+  // The field: a floating slab of moss with a painted survey grid, soil on the sides
+  function groundTexture() {
+    const c = document.createElement('canvas'); c.width = 1600; c.height = 900;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(800, 450, 100, 800, 450, 950);
+    grad.addColorStop(0, '#1e3a2c'); grad.addColorStop(1, '#122a20');
+    g.fillStyle = grad; g.fillRect(0, 0, 1600, 900);
+    let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 9000; i++) {
+      const x = rnd() * 1600, y = rnd() * 900, r = 0.6 + rnd() * 2.2;
+      g.fillStyle = rnd() < 0.5 ? 'rgba(143,191,138,0.10)' : 'rgba(10,25,18,0.18)';
+      g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill();
+    }
+    g.strokeStyle = 'rgba(236,228,208,0.07)'; g.lineWidth = 2;
+    g.beginPath();
+    for (let x = 100; x < 1600; x += 100) { g.moveTo(x, 0); g.lineTo(x, 900); }
+    for (let y = 100; y < 900; y += 100) { g.moveTo(0, y); g.lineTo(1600, y); }
+    g.stroke();
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+    return t;
+  }
+  const soil = new THREE.MeshStandardMaterial({ color: L(0x3a2c22), roughness: 1 });
+  const moss = new THREE.MeshStandardMaterial({ map: groundTexture(), roughness: 0.95 });
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(16.4, 0.9, 9.4), [soil, soil, moss, soil, soil, soil]);
+  slab.position.y = -0.45; slab.receiveShadow = true; scene.add(slab);
+  const lip = new THREE.Mesh(new THREE.BoxGeometry(16.6, 0.12, 9.6), new THREE.MeshStandardMaterial({ color: L(0x2a4a3a), roughness: 1 }));
+  lip.position.y = -0.09; lip.receiveShadow = true; scene.add(lip);
+  // a few boulders around the rim for scale
+  (function () {
+    const rock = new THREE.MeshStandardMaterial({ color: L(0x55605a), roughness: 0.9, flatShading: true });
+    const geo = new THREE.DodecahedronGeometry(1, 0);
+    let s = 3; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 22; i++) {
+      const m = new THREE.Mesh(geo, rock);
+      const side = i % 4, t = rnd() * 2 - 1;
+      const x = side < 2 ? t * 8 : (side === 2 ? -8.25 : 8.25), z = side < 2 ? (side ? 4.75 : -4.75) : t * 4.5;
+      m.position.set(x, 0, z); const k = 0.08 + rnd() * 0.22; m.scale.set(k * 1.3, k, k);
+      m.rotation.set(rnd() * 3, rnd() * 3, 0); m.castShadow = m.receiveShadow = true; scene.add(m);
+    }
+  })();
+
+  // Instanced creature parts
+  const CAP = 2000, FCAP = 500;
+  function inst(geo, mat, cap, shadow) {
+    const m = new THREE.InstancedMesh(geo, mat, cap);
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    m.frustumCulled = false; m.count = 0;
+    if (shadow) m.castShadow = true;
+    scene.add(m); return m;
+  }
+  const bodyMat = new THREE.MeshStandardMaterial({ color: L(0xffffff), roughness: 0.32, metalness: 0.0 });
+  const bodies = inst(new THREE.SphereGeometry(1, 28, 18), bodyMat, CAP, true);
+  bodies.receiveShadow = true;
+  bodies.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(CAP * 3), 3); // per-creature diet colour
+  bodies.instanceColor.setUsage(THREE.DynamicDrawUsage);
+  const whites = inst(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshStandardMaterial({ color: L(0xf7f2e6), roughness: 0.25 }), CAP * 2, false);
+  const pupils = inst(new THREE.SphereGeometry(1, 12, 10), new THREE.MeshStandardMaterial({ color: L(0x0d1714), roughness: 0.2 }), CAP * 2, false);
+  const brows = inst(new THREE.BoxGeometry(0.07, 0.07, 0.36), new THREE.MeshStandardMaterial({ color: L(0x2a140a), roughness: 0.6 }), CAP * 2, false);
+  const ringGeo = new THREE.RingGeometry(1, 1.14, 48); ringGeo.rotateX(-Math.PI / 2);
+  const huntRings = inst(ringGeo, new THREE.MeshBasicMaterial({ color: L(COL.ember), transparent: true, opacity: 0.75, depthWrite: false }), CAP, false);
+  const senseGeo = new THREE.RingGeometry(0.985, 1, 64); senseGeo.rotateX(-Math.PI / 2);
+  const senseRings = inst(senseGeo, new THREE.MeshBasicMaterial({ color: L(COL.bone), transparent: true, opacity: 0.18, depthWrite: false }), CAP, false);
+  const foodMat = new THREE.MeshStandardMaterial({ color: L(0x7cc06a), roughness: 0.55, flatShading: true });
+  const foods = inst(new THREE.IcosahedronGeometry(1, 0), foodMat, FCAP, true);
+  const selRing = new THREE.Mesh(new THREE.RingGeometry(1, 1.12, 64).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: L(COL.bone), transparent: true, opacity: 0.95, depthWrite: false }));
+  selRing.visible = false; scene.add(selRing);
+
+  const dummy = new THREE.Object3D(), tmpCol = new THREE.Color();
+  let drawn = []; // instance index → creature, for picking
+
+  // Camera shots
+  const SHOTS = {
+    wide: { pos: [0, 10.5, 12.5], target: [0, 0, 0.6] },
+    low:  { pos: [-8.5, 1.6, 6.8], target: [0.5, 0.3, 0] },
+    top:  { pos: [0, 17.5, 0.01], target: [0, 0, 0] },
+  };
+  let shot = null;
+  function setShot(k) {
+    const s = SHOTS[k]; shot = { pos: new THREE.Vector3(...s.pos), target: new THREE.Vector3(...s.target), t: reduced ? 1 : 0 };
+    [...$('cams').querySelectorAll('[data-cam]')].forEach(b => b.setAttribute('aria-pressed', b.dataset.cam === k));
+    setFollow(false);
+  }
+  camera.position.set(...SHOTS.wide.pos); controls.target.set(...SHOTS.wide.target); controls.update();
+  $('cams').querySelectorAll('[data-cam]').forEach(b => b.onclick = () => setShot(b.dataset.cam));
+  controls.addEventListener('start', () => { shot = null; });
+
+  function setOrbit(on) { controls.autoRotate = on; $('orbitBtn').setAttribute('aria-pressed', on); }
+  let follow = false;
+  function setFollow(on) { follow = on && !!selected; $('followBtn').setAttribute('aria-pressed', follow); }
+  function setHud(on) { document.body.classList.toggle('clean', !on); $('hudBtn').setAttribute('aria-pressed', on); }
+  $('orbitBtn').onclick = () => setOrbit(!controls.autoRotate);
+  $('followBtn').onclick = () => setFollow(!follow);
+  $('hudBtn').onclick = () => setHud(document.body.classList.contains('clean'));
+  $('tShadow').onchange = () => { sun.castShadow = $('tShadow').checked; };
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox') return;
+    if (e.code === 'Space') { e.preventDefault(); setRunning(!running); }
+    else if (e.key === 'r' || e.key === 'R') setRec(!document.body.classList.contains('rec'));
+    else if (e.key === 'Escape') setRec(false);
+    else if (e.key === 'o' || e.key === 'O') setOrbit(!controls.autoRotate);
+    else if (e.key === 't' || e.key === 'T') setFollow(!follow);
+    else if (e.key === 'h' || e.key === 'H') setHud(document.body.classList.contains('clean'));
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+  });
+
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    if (r.width && r.height) { renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const pc = $('popChart'); const pr = pc.getBoundingClientRect();
+    pc.width = Math.round(pr.width * dpr); pc.height = Math.round(150 * dpr);
+  }
+  window.addEventListener('resize', resize);
+
+  // Click to select (ignore drags)
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  let downAt = null;
+  cv.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+  cv.addEventListener('pointerup', e => {
+    if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) { downAt = null; return; }
+    downAt = null;
+    const r = cv.getBoundingClientRect();
+    ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObject(bodies)[0];
+    if (hit && drawn[hit.instanceId]) selected = drawn[hit.instanceId];
+    else {
+      // fall back to the nearest creature on the ground under the cursor
+      const p = new THREE.Vector3(); ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p);
+      let best = null, bd = 0.35 * 0.35;
+      for (const b of world.blobs) { const d = (toX(b.x) - p.x) ** 2 + (toZ(b.y) - p.z) ** 2; if (d < bd) { bd = d; best = b; } }
+      selected = best;
+    }
+    if (!selected) setFollow(false);
+    renderSpecimen();
+  });
+
+  // Local offset (forward x, up y, side z) rotated by heading θ about Y, added to a base point
+  function place(out, bx, by, bz, th, lx, ly, lz) {
+    const c = Math.cos(th), s = Math.sin(th);
+    out.set(bx + lx * c + lz * s, by + ly, bz - lx * s + lz * c);
+  }
+  const v3 = new THREE.Vector3();
+
+  function render3D(dt) {
+    const list = world.blobs;
+    const eyes = $('tEyes').checked, sense = $('tSense').checked;
+    let n = 0, ne = 0, nb = 0, nh = 0;
+    drawn.length = 0;
+    for (const b of list) {
+      if (n >= CAP) break;
+      let a = anim.get(b.id);
+      const x = toX(b.x), z = toZ(b.y);
+      if (!a) { a = { ph: Math.random() * 6.28, px: x, pz: z, born: 0 }; anim.set(b.id, a); }
+      const moved = Math.hypot(x - a.px, z - a.pz); a.px = x; a.pz = z;
+      a.ph += moved * 9 + dt * 1.5;
+      a.born = Math.min(1, a.born + dt * 3);
+      const r = SBWorld.radius(b) * DRAW * S * (reduced ? 1 : (0.4 + 0.6 * a.born));
+      const hop = reduced ? 0 : Math.abs(Math.sin(a.ph)) * r * Math.min(1, moved * 40) * 0.55;
+      const squash = reduced ? 0 : Math.cos(a.ph * 2) * 0.06;
+      const th = -b.heading, y = r * 0.82 + hop;
+
+      dummy.position.set(x, y, z);
+      dummy.rotation.set(0, th, 0);
+      dummy.scale.set(r * (1.04 + squash), r * (0.82 - squash), r * (1 - squash * 0.5));
+      dummy.updateMatrix(); bodies.setMatrixAt(n, dummy.matrix);
+      const rgb = dietRGB(b.d); tmpCol.setRGB(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255).convertSRGBToLinear();
+      bodies.setColorAt(n, tmpCol);
+      drawn[n] = b;
+
+      if (eyes && ne < CAP * 2) {
+        const er = r * 0.27, pr = er * 0.55;
+        const look = b.mode === 'hunt' ? 0.08 : 0;
+        for (const sgn of [-1, 1]) {
+          place(v3, x, y, z, th, r * 0.72, r * 0.32, sgn * r * 0.4);
+          dummy.position.copy(v3); dummy.rotation.set(0, th, 0); dummy.scale.setScalar(er); dummy.updateMatrix(); whites.setMatrixAt(ne, dummy.matrix);
+          place(v3, x, y, z, th, r * 0.72 + er * 0.62, r * 0.32 - look * r, sgn * r * 0.4 * 0.92);
+          dummy.position.copy(v3); dummy.scale.setScalar(pr); dummy.updateMatrix(); pupils.setMatrixAt(ne, dummy.matrix);
+          ne++;
+          if (b.d > 0.66) { // hunters get angry brows
+            place(v3, x, y, z, th, r * 0.78, r * 0.62, sgn * r * 0.4);
+            dummy.position.copy(v3); dummy.rotation.set(-sgn * 0.5, th, 0, 'YXZ'); dummy.scale.setScalar(r); dummy.updateMatrix();
+            brows.setMatrixAt(nb++, dummy.matrix);
+          }
+        }
+      }
+      if (b.mode === 'hunt') {
+        dummy.position.set(x, 0.012, z); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(r * 1.35); dummy.updateMatrix();
+        huntRings.setMatrixAt(nh++, dummy.matrix);
+      }
+      if (sense) {
+        dummy.position.set(x, 0.008, z); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(SBWorld.senseR(b) * S); dummy.updateMatrix();
+        senseRings.setMatrixAt(n, dummy.matrix);
+      }
+      n++;
+    }
+    bodies.count = n; whites.count = pupils.count = ne; brows.count = nb; huntRings.count = nh; senseRings.count = sense ? n : 0;
+    for (const m of [bodies, whites, pupils, brows, huntRings, senseRings]) m.instanceMatrix.needsUpdate = true;
+    if (bodies.instanceColor) bodies.instanceColor.needsUpdate = true;
+
+    let nf = 0;
+    if ($('tFood').checked) {
+      for (const f of world.foods) {
+        if (nf >= FCAP) break;
+        const k = 0.04 + ((f.x * 13.7 + f.y * 7.3) % 1) * 0.018;
+        dummy.position.set(toX(f.x), k * 0.8, toZ(f.y)); dummy.rotation.set(f.x, f.y, 0); dummy.scale.setScalar(k); dummy.updateMatrix();
+        foods.setMatrixAt(nf++, dummy.matrix);
+      }
+    }
+    foods.count = nf; foods.instanceMatrix.needsUpdate = true;
+
+    if (selected && selected.alive) {
+      const r = SBWorld.radius(selected) * DRAW * S;
+      selRing.visible = true; selRing.position.set(toX(selected.x), 0.016, toZ(selected.y)); selRing.scale.setScalar(r * 1.7);
+    } else {
+      selRing.visible = false;
+      if (selected) { renderSpecimen(); setFollow(false); }
+    }
+    $('extinct').hidden = list.length > 0;
+  }
+
+  function updateCamera(dt) {
+    if (shot) {
+      shot.t = Math.min(1, shot.t + dt * 1.2);
+      const k = 1 - Math.pow(1 - shot.t, 3);
+      camera.position.lerp(shot.pos, k * 0.15 + (shot.t >= 1 ? 1 : 0));
+      controls.target.lerp(shot.target, k * 0.15 + (shot.t >= 1 ? 1 : 0));
+      if (shot.t >= 1) shot = null;
+    }
+    if (follow && selected && selected.alive) {
+      const goal = new THREE.Vector3(toX(selected.x), 0.2, toZ(selected.y));
+      const delta = goal.sub(controls.target).multiplyScalar(reduced ? 1 : 0.08);
+      controls.target.add(delta); camera.position.add(delta);
+    }
+    controls.update();
+  }
+
+  // ---------- Charts and panels (unchanged) ----------
+  function drawPop() {
+    const pc = $('popChart'), c = pc.getContext('2d'), w = pc.width, h = pc.height, hs = world.history;
+    c.clearRect(0, 0, w, h);
+    if (hs.length < 2) return;
+    let max = 10; for (const s of hs) max = Math.max(max, s.pop);
+    max = Math.ceil(max / 50) * 50;
+    const padL = w * 0.07, padB = h * 0.12, pw = w - padL, ph = h - padB;
+    const X = i => padL + i / (hs.length - 1) * pw, Y = v => ph - v / max * ph;
+    c.strokeStyle = COL.line; c.lineWidth = 1; c.fillStyle = COL.muted;
+    c.font = `${Math.round(h * 0.075)}px "IBM Plex Mono", monospace`; c.textAlign = 'right'; c.textBaseline = 'middle';
+    for (const v of [0, max / 2, max]) { c.beginPath(); c.moveTo(padL, Y(v)); c.lineTo(w, Y(v)); c.stroke(); c.fillText(v, padL - 6, Y(v)); }
+    const layers = [['herb', COL.sage], ['omni', COL.gold], ['carn', COL.ember]];
+    const base = new Array(hs.length).fill(0);
+    for (const [k, col] of layers) {
+      c.beginPath();
+      hs.forEach((s, i) => { const y = Y(base[i] + s[k]); i ? c.lineTo(X(i), y) : c.moveTo(X(i), y); });
+      for (let i = hs.length - 1; i >= 0; i--) c.lineTo(X(i), Y(base[i]));
+      c.closePath(); c.fillStyle = col; c.globalAlpha = 0.85; c.fill(); c.globalAlpha = 1;
+      hs.forEach((s, i) => base[i] += s[k]);
+    }
+    c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = COL.muted;
+    c.fillText('tick ' + hs[hs.length - 1].t.toLocaleString(), padL + 4, ph + 4);
+  }
+
+  const TRAITS = [['ms', 'Size', 3, 'Bigger can swallow smaller, but costs more to run'], ['mv', 'Speed', 3, 'Catch food first, or escape'], ['mr', 'Senses', 3, 'See food and danger from further away'], ['md', 'Meat in diet', 1, '0% grazer · 100% pure hunter']];
+  $('traits').innerHTML = TRAITS.map(([k, n, , tip]) => `<div class="trait" title="${tip}"><span class="label">${n}</span><span class="v" id="tv_${k}">–</span><canvas id="ts_${k}" height="34"></canvas></div>`).join('');
+  function drawTraits(s) {
+    const hs = world.history;
+    for (const [k, , max] of TRAITS) {
+      $('tv_' + k).textContent = k === 'md' ? Math.round(s[k] * 100) + '%' : s[k].toFixed(2) + '×';
+      const cvs = $('ts_' + k), c = cvs.getContext('2d');
+      const dpr = Math.min(window.devicePixelRatio || 1, 2), w = Math.round(cvs.getBoundingClientRect().width * dpr), h = Math.round(34 * dpr);
+      if (cvs.width !== w) { cvs.width = w; cvs.height = h; }
+      c.clearRect(0, 0, w, h);
+      if (hs.length < 2) continue;
+      let lo = Infinity, hi = -Infinity; for (const x of hs) { lo = Math.min(lo, x[k]); hi = Math.max(hi, x[k]); }
+      if (hi - lo < 0.05 * max) { const m = (hi + lo) / 2; lo = m - 0.025 * max; hi = m + 0.025 * max; }
+      const X = i => i / (hs.length - 1) * (w - 6 * dpr), Y = v => h - 3 * dpr - (v - lo) / (hi - lo) * (h - 6 * dpr);
+      c.beginPath(); hs.forEach((x, i) => i ? c.lineTo(X(i), Y(x[k])) : c.moveTo(X(i), Y(x[k])));
+      c.strokeStyle = k === 'md' ? COL.ember : COL.bone; c.lineWidth = 1.5 * dpr; c.stroke();
+      const last = hs[hs.length - 1][k]; c.fillStyle = c.strokeStyle; c.beginPath(); c.arc(X(hs.length - 1), Y(last), 2.5 * dpr, 0, 6.283); c.fill();
+    }
+  }
+
+  function renderSpecimen() {
+    const el = $('specimen');
+    if (!selected) { el.innerHTML = '<p class="empty">Click a creature in the field to read its traits, diet and lineage.</p>'; return; }
+    const b = selected;
+    const kind = b.d < 0.33 ? 'Grazer' : b.d < 0.66 ? 'Omnivore' : 'Hunter';
+    const fate = b.alive ? b.mode : (b.killedBy ? 'eaten by #' + b.killedBy : 'died (starved or old age)');
+    const bar = (v, max) => `<div class="bar"><i style="width:${Math.min(100, v / max * 100)}%;background:${dietColor(b.d)}"></i></div>`;
+    el.innerHTML = `<div class="nm">Creature #${b.id}</div>
+      <div>${kind} · generation ${b.gen} · ${fate}</div>
+      <div>Size ${b.s.toFixed(2)}×</div>${bar(b.s, 3)}
+      <div>Speed ${b.v.toFixed(2)}×</div>${bar(b.v, 3)}
+      <div>Senses ${b.r.toFixed(2)}×</div>${bar(b.r, 3)}
+      <div>Meat in diet ${Math.round(b.d * 100)}%</div>${bar(b.d, 1)}`;
+  }
+
+  let frame = 0, last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    if (running && world.blobs.length) { const n = +$('spd').value; for (let i = 0; i < n; i++) world.step(); }
+    render3D(dt); updateCamera(dt);
+    renderer.render(scene, camera);
+    if (frame++ % 6 === 0) {
+      const s = world.stats();
+      $('cGen').textContent = $('hudGen').textContent = Math.round(s.gen);
+      $('cPop').textContent = $('hudPop').textContent = s.pop;
+      $('hudCarn').textContent = s.carn;
+      $('cKills').textContent = $('hudKills').textContent = world.kills.toLocaleString();
+      $('cBirths').textContent = world.births.toLocaleString();
+      drawPop(); drawTraits(s);
+      if (selected && frame % 30 === 1) renderSpecimen();
+    }
+    if (frame % 600 === 0) { const alive = new Set(world.blobs.map(b => b.id)); for (const id of anim.keys()) if (!alive.has(id)) anim.delete(id); }
+    requestAnimationFrame(loop);
+  }
+
+  syncInputs(); restart(); resize(); requestAnimationFrame(loop);
+})();
+</script>
