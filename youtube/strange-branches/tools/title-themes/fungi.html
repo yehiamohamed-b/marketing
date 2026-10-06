@@ -338,72 +338,119 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
   // =====================================================================
   const THEMES = {};
 
-  // ---------------- MYTHS: the World-Tree, its hydra, and Odin's eye ----------------
+  // ---------------- MYTHS: the Hydra (nine heads, bat wings, a cauterised stump regrowing) ----------------
   THEMES.myth = {
     sub: 'Every myth was a field note',
-    menu: [['New Branch', 'The Norns have not woven this thread. Yet.'], ['Continue', 'Your save was eaten by a hydra. Two more grew back.'], ['Bestiary', 'Bestiary sealed. Offer an eye to Mimir first.'], ['Options', 'Difficulty: Greek tragedy. There is only one setting.'], ['Quit', 'Prometheus tried to leave too. Ask him about his liver.']],
-    bg: '#05070a', tint: [0.8, 0.9, 1.1], exposure: 1.0, light: '#ffb84a',
+    menu: [['New Branch', 'Cut one branch off and two grow back.'], ['Continue', 'Your save was eaten by a hydra. Two more grew back.'], ['Bestiary', 'Bestiary sealed. Complete all twelve labours first.'], ['Options', 'Difficulty: Greek tragedy. There is only one setting.'], ['Quit', 'Heracles tried to leave too. Ask him how that went.']],
+    bg: '#05070a', tint: [0.85, 1.05, 0.9], exposure: 1.0, light: '#9aff6a',
     build(A) {
-      const E = A.V3(0, 4, -40), list = [], bark = [];
-      A.sprite('#1a3a3a', 160, 0.75, null, true).position.set(-50, 40, -170); A.sprite('#3a2a0a', 130, 0.55, null, true).position.set(60, 30, -170);
-      const rays = A.sprite('#ffd27a', 60, 0.18, A.rayTex); rays.position.set(0, 14, -46);
-      const halo = A.sprite('#ffb84a', 34, 0.35); halo.position.set(0, 10, -44);
-      const twinkle = A.stars('#e8e0c8');
-      // trunk: a ring of bark voxels, with gold runes
-      for (let y = -16; y <= 8; y += 0.8) { const R = 3.2 + Math.max(0, (-y - 8) * 0.12) + Math.max(0, (y - 4) * 0.2); const n = Math.round(TAU * R / 0.8); for (let k = 0; k < n; k++) { const a = k / n * TAU, rune = (Math.abs(Math.sin(a * 3 + y * 0.7)) < 0.05 && Math.sin(a) > -0.2); bark.push([E.x + Math.cos(a) * R, E.y + y, E.z + Math.sin(a) * R, rune ? [1.6, 1.1, 0.4] : pal(['#7a6248', '#6a5440', '#866c50', '#5a4636']), 0.85]); } }
-      // canopy branches (static), leaf clusters (shimmer)
-      const leaves = []; (function grow(x, y, ang, len, depth) { const ex = x + Math.cos(ang) * len, ey = y + Math.sin(ang) * len, n = Math.round(len / 0.5); for (let i = 0; i <= n; i++) bark.push([E.x + x + (ex - x) * i / n, E.y + y + (ey - y) * i / n, E.z + 1 + depth * 0.3, pal(['#7a6248', '#6a5440']), 0.9 - depth * 0.15]); if (depth < 4) { grow(ex, ey, ang + 0.35 + rnd() * 0.25, len * 0.72, depth + 1); grow(ex, ey, ang - 0.35 - rnd() * 0.25, len * 0.72, depth + 1); } else leaves.push([ex, ey]); })(0, 8, Math.PI / 2, 5, 0);
-      const leafCells = []; leaves.forEach(([x, y], li) => { for (let i = 0; i < 16; i++) leafCells.push({ x: E.x + x + (rnd() - 0.5) * 2.6, y: E.y + y + (rnd() - 0.5) * 2, z: E.z + 2 + (rnd() - 0.5) * 2, ph: rnd() * TAU, li }); });
-      const leafM = A.dyn(leafCells.length);
-      // roots hanging into the void
-      const roots = Array.from({ length: 11 }, (_, i) => ({ x: (i - 5) * 0.8, a: -Math.PI / 2 + (i - 5) * 0.12, off: rnd() * TAU }));
-      const rootM = A.dyn(roots.length * 26);
-      // Odin's eye in the trunk
-      const eyeShell = A.shell(E.x, E.y + 3, E.z + 2.2, 3.4, 0.3, { zmin: 0.5 });
-      // world serpent spiralling the trunk, and five hydra necks from the canopy
-      const SN = 170, serp = A.dyn(SN);
-      const necks = Array.from({ length: 5 }, (_, i) => ({ bx: (i - 2) * 3.2, by: 10 + (i % 2) * 1.5, a: Math.PI / 2 + (i - 2) * 0.5, off: rnd() * TAU }));
-      const neckM = A.dyn(necks.length * 12), headM = A.dyn(necks.length * 14);
-      // greek columns on the island
-      A.island(list, { top: ['#8a8a82', '#7a7a72', '#6e7466', '#827c70'], mid: ['#4a4640', '#3e3a35'], deep: ['#2e2a26', '#26221f'] });
-      for (let i = 0; i < 6; i++) { const a = Math.PI * (1.1 + i * 0.16), r = 4.9, h = Math.floor((2 + rnd() * 4) / 0.5), px = Math.round(Math.cos(a) * r / 0.5) * 0.5, pz = Math.round(Math.sin(a) * r / 0.5) * 0.5; for (let k = 0; k < h; k++) for (const [dx, dz] of [[0, 0], [0.25, 0], [-0.25, 0], [0, 0.25], [0, -0.25]]) list.push([px + dx, 0.25 + k * 0.5, pz + dz, (dx || dz) ? '#d8d2c2' : '#c8c2b2', 0.3]); list.push([px, 0.25 + h * 0.5, pz, '#e2dccc', [0.9, 0.3, 0.9]]); }
-      bark.forEach(v => { if (typeof v[3] === 'string') { const f = Math.max(0, Math.min(1, (v[2] - E.z) / 4)); v[3] = A.scl(A.H(v[3]), 0.45 + 0.75 * f); } }); A.stat(bark, false);
-      A.skull(list, 1.2, 0, 3.4); A.skull(list, 3.6, 0, 0.6); A.skull(list, -4.2, 0, 1.6);
-      // fallen shield
-      for (let a = 0; a < TAU; a += 0.2) for (let r = 0; r < 0.45; r += 0.1) list.push([A.FIG.x + 1.3 + Math.cos(a) * r, 0.08, A.FIG.z + 0.6 + Math.sin(a) * r, r > 0.35 ? '#c89a3a' : (r < 0.12 ? '#8a1a10' : '#a8782a'), [0.11, 0.05, 0.11]]);
-      // constellation beasts in the far sky (wolf, stag, scorpion)
-      const consts = [{ c: [-70, 34, -200], s: 4, pts: [[0, 0], [2, 1], [4, 1], [6, 0], [7, 2], [8, 1], [6, -2], [2, -2], [1, -4], [6, -4]] }, { c: [60, 40, -205], s: 4, pts: [[0, 0], [3, 0], [5, 1], [5, 4], [4, 6], [6, 6], [7, 8], [3, 0], [3, -3], [5, -3]] }, { c: [-10, 58, -230], s: 5, pts: [[0, 0], [1, 1], [3, 1], [5, 0], [6, -1], [7, 0], [8, 2], [8, 4], [7, 5]] }];
-      const cStars = [], cLines = [];
-      consts.forEach(cs => { cs.pts.forEach(([x, y], i) => { cStars.push([cs.c[0] + x * cs.s, cs.c[1] + y * cs.s, cs.c[2]]); if (i) { const [x0, y0] = cs.pts[i - 1]; for (let k = 1; k < 8; k++) cLines.push([cs.c[0] + (x0 + (x - x0) * k / 8) * cs.s, cs.c[1] + (y0 + (y - y0) * k / 8) * cs.s, cs.c[2]]); } }); });
-      cLines.forEach(q => list.push([q[0], q[1], q[2], [0.25, 0.32, 0.45], 0.5]));
+      const E = A.V3(0, 6, -42), list = [];
+      A.sprite('#0f2a1a', 170, 0.8, null, true).position.set(-50, 40, -170); A.sprite('#2a2a0a', 140, 0.55, null, true).position.set(60, 30, -170);
+      const rays = A.sprite('#b8ff7a', 70, 0.14, A.rayTex); rays.position.set(E.x, E.y + 10, E.z - 8);
+      const glow = A.sprite('#6aff4a', 36, 0.22); glow.position.set(E.x, E.y + 6, E.z - 4);
+      const twinkle = A.stars('#e8f0d0');
+      const up = A.V3(0, 1, 0), camPos = A.camera.position;
+
+      // the body: a scaled chest with bronze belly plates
+      const body = A.shell(E.x, E.y, E.z, 7, 0.42, { sy: 0.85, zmin: -2 });
+      // nine necks fanning from the shoulders (+ one cauterised stump budding two new heads)
+      const NECK_N = 20, necks = [];
+      for (let i = 0; i < 9; i++) { const u = i / 8, ang = Math.PI * (0.92 - 0.84 * u); necks.push({ bx: Math.cos(ang) * 6, by: 3 + Math.sin(ang) * 3, a: ang, len: i === 4 ? 1.15 : 0.95 - Math.abs(u - 0.5) * 0.2, off: rnd() * TAU, big: i === 4 ? 1.4 : 1, stump: i === 6 }); }
+      const neckM = A.dyn(necks.length * NECK_N);
+      // head template (units of 0.42): skull, lower jaw, teeth, horns, eyes. f = forward, s = up, w = side
+      const HEAD = [];
+      for (let f = 0; f <= 6; f++) for (let s = 0; s <= 2; s++) for (let w = -1; w <= 1; w++) { if (s === 2 && f > 4) continue; if (Math.abs(w) === 1 && f > 5) continue; HEAD.push({ f, s, w, part: 'skull' }); }
+      for (let f = 1; f <= 6; f++) for (let w = -1; w <= 1; w++) HEAD.push({ f, s: -1, w, part: 'jaw' });
+      for (let f = 2; f <= 6; f += 1) for (const w of [-1, 1]) { HEAD.push({ f, s: -0.4, w: w * 1.1, part: 'tooth' }); HEAD.push({ f, s: -0.6, w: w * 1.1, part: 'ltooth' }); }
+      for (const w of [-1, 1]) [[-1, 3], [-2, 3.8], [-3, 4.4], [-4, 4.8], [1, 3], [0, 3.6]].forEach(([f, s]) => HEAD.push({ f, s, w: w * 1.2, part: 'horn' }));
+      for (const w of [-1, 1]) HEAD.push({ f: 3.6, s: 1.6, w: w * 1.25, part: 'eye' });
+      for (let f = -3; f <= 0; f++) HEAD.push({ f, s: 2.6 + (f % 2 ? 0.4 : 0), w: 0, part: 'frill' });
+      const NHEADS = necks.length + 2, headM = A.dyn(NHEADS * HEAD.length);
+      // bat wings: four finger bones each, membrane between them
+      const WF = 4, WL = 14, WS = 7, wings = [-1, 1].map(side => ({ side, fingers: Array.from({ length: WF }, (_, j) => ({ ang: side > 0 ? 0.25 + j * 0.42 : Math.PI - 0.25 - j * 0.42, len: 16 + j * 2.5 - (j === 3 ? 6 : 0) })) }));
+      const boneM = A.dyn(2 * WF * WL), membM = A.dyn(2 * (WF - 1) * WL * WS);
+      // tail coiling beneath
+      const tailM = A.dyn(46);
+      // drifting broken temple columns at the sides
+      const cols = [[-38, 14, -70, 0.3], [40, 8, -75, -0.4], [-26, -6, -55, 0.8], [30, 28, -95, -0.2], [-52, 30, -110, 0.5]].map(([x, y, z, r]) => ({ x, y, z, r, off: rnd() * TAU, cells: [] }));
+      cols.forEach(c => { for (let k = 0; k < 9; k++) for (const [dx, dz] of [[0, 0], [0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5]]) c.cells.push([dx, k * 0.6, dz, (dx || dz) ? '#d8d2c2' : '#c8c2b2']); });
+      const colM = A.dyn(cols.reduce((a, c) => a + c.cells.length, 0));
+      // constellations (the Hydra constellation among them)
+      const consts = [{ c: [-72, 34, -200], s: 4, pts: [[0, 0], [2, 1], [4, 1], [6, 0], [8, 1], [10, 0], [12, 2], [13, 4]] }, { c: [58, 42, -205], s: 4, pts: [[0, 0], [3, 0], [5, 1], [5, 4], [4, 6], [6, 6], [7, 8]] }, { c: [-12, 62, -230], s: 5, pts: [[0, 0], [1, 1], [3, 1], [5, 0], [6, -1], [7, 0], [8, 2]] }];
+      const cStars = []; consts.forEach(cs => cs.pts.forEach(([x, y], i) => { cStars.push([cs.c[0] + x * cs.s, cs.c[1] + y * cs.s, cs.c[2]]); if (i) { const [x0, y0] = cs.pts[i - 1]; for (let k = 1; k < 8; k++) list.push([cs.c[0] + (x0 + (x - x0) * k / 8) * cs.s, cs.c[1] + (y0 + (y - y0) * k / 8) * cs.s, cs.c[2], [0.25, 0.35, 0.3], 0.5]); } }));
       const cStarM = A.dyn(cStars.length);
-      // drifting stone colossus heads, eyes shut until they all look at you
-      const heads = [[-58, 14, -130, 6], [62, 8, -138, 7], [-30, -14, -110, 4.5], [40, -18, -118, 5]].map(([x, y, z, R]) => ({ x, y, z, R, off: rnd(), sh: A.shell(x, y, z, R, 0.75) }));
-      const reach = A.makeReach({ points: [A.V3(0, -12, -37), A.V3(3, -4, -24), A.V3(1.5, 0.9, -8), A.V3(-2.2, 0.35, -0.8)], base: [0.16, 0.22, 0.1], glow: [1.2, 0.95, 0.3], stripe: 5, stripeCol: [0.5, 0.42, 0.18] });
+      // island: greek columns, skulls, dropped shield, a burning torch (Heracles cauterised the stumps with fire)
+      A.island(list, { top: ['#8a8a82', '#7a7a72', '#6e7466', '#827c70'], mid: ['#4a4640', '#3e3a35'], deep: ['#2e2a26', '#26221f'] });
+      for (let i = 0; i < 6; i++) { const a = Math.PI * (1.1 + i * 0.16), r = 4.9, h = Math.floor((2 + rnd() * 4) / 0.5), px = Math.round(Math.cos(a) * r / 0.5) * 0.5, pz = Math.round(Math.sin(a) * r / 0.5) * 0.5; for (let k = 0; k < h; k++) for (const [dx, dz] of [[0, 0], [0.25, 0], [-0.25, 0], [0, 0.25], [0, -0.25]]) list.push([px + dx, 0.25 + k * 0.5, pz + dz, (dx || dz) ? [0.85, 0.82, 0.76] : [0.78, 0.75, 0.7], 0.3]); list.push([px, 0.25 + h * 0.5, pz, [0.9, 0.87, 0.8], [0.9, 0.3, 0.9]]); }
+      A.skull(list, 1.2, 0, 3.4); A.skull(list, 3.6, 0, 0.6); A.skull(list, -4.2, 0, 1.6);
+      for (let a = 0; a < TAU; a += 0.2) for (let r = 0; r < 0.45; r += 0.1) list.push([A.FIG.x + 1.3 + Math.cos(a) * r, 0.08, A.FIG.z + 0.6 + Math.sin(a) * r, r > 0.35 ? '#c89a3a' : (r < 0.12 ? '#8a1a10' : '#a8782a'), [0.11, 0.05, 0.11]]);
+      for (let k = 0; k < 8; k++) list.push([A.FIG.x + 2.2 + k * 0.1, 0.08, A.FIG.z + 1.4 - k * 0.04, '#5a3a20', 0.1]);
+      const torch = A.makeParticles({ type: 'rise', n: 22, x: [A.FIG.x + 2.9, A.FIG.x + 3.1], y: [0.1, 1.1], z: [A.FIG.z + 1.1, A.FIG.z + 1.2], cols: ['#fff1b0', '#ffd27a', '#ffa24a', '#ff7a3d'], size: 0.14, sway: 0.06, speeds: 4, fade: true });
+      const reach = A.makeReach({ points: [A.V3(E.x, E.y - 5, E.z + 3), A.V3(3, -1, -26), A.V3(1.5, 0.9, -8), A.V3(-2.2, 0.35, -0.8)], base: [0.14, 0.26, 0.12], glow: [0.9, 1.6, 0.4], stripe: 5, stripeCol: [0.6, 0.5, 0.2] });
       const veins = A.makeVeins(A.V3(-2.2, 0, -0.8));
-      const leavesFall = A.makeParticles({ type: 'fall', n: 70, x: [-30, 30], y: [-8, 36], z: [-40, 6], cols: ['#e6b84a', '#c8a03a', '#ffd27a'], size: 0.3, sway: 0.9, spin: true });
-      A.buildFigure({ armor: ['#8a6a3a', '#a07a42', '#6a5230'], headCol: () => pal(['#a07a42', '#8a6a3a']), cape: ['#7a1a14', '#8a2018'], coil: '#2a3a1a',
+      const mist = A.makeParticles({ type: 'rise', n: 120, x: [-30, 30], y: [-10, 30], z: [-44, 4], cols: ['#8aff6a', '#c8ff9a', '#5ad04a'], size: 0.16, sway: 0.9, fade: true });
+      A.buildFigure({ armor: ['#8a6a3a', '#a07a42', '#6a5230'], headCol: () => pal(['#a07a42', '#8a6a3a']), cape: ['#7a1a14', '#8a2018'], coil: '#2a4a1a',
         props: (seg, push) => { seg([-0.5, 0, 1.0], [-0.5, 1.0, 0.92], 0.035, '#8a6a4a'); seg([-0.5, 1.0, 0.92], [-0.5, 1.2, 0.9], 0.05, '#c0c4ca'); for (let z = -0.2; z <= 0.2; z += 0.1) push(0.04, 1.42, 0.58 + z, '#b0201a'); } });
       A.stat(list, true);
-      const iris = [1.0, 0.75, 0.25];
+
+      const F = A.V3(), S = A.V3(), U = A.V3(), P = A.V3();
+      function drawHead(hi, x, y, z, dir2, t, c, k, scale) { // dir2 = neck direction angle in the screen plane
+        const p = t / LOOP * TAU, lc = c.lc;
+        F.set(Math.cos(dir2), Math.sin(dir2), 0.25).normalize();
+        P.set(camPos.x - x, camPos.y - y, camPos.z - z).normalize(); F.lerp(P, lc * 0.85).normalize();
+        S.crossVectors(F, up).normalize(); U.crossVectors(S, F).normalize();
+        const jaw = 0.25 + 0.75 * c.yank + 0.25 * Math.max(0, Math.sin(p * 2 + k)), vs = 0.58 * scale;
+        HEAD.forEach((h, j) => {
+          let f = h.f, s = h.s;
+          if (h.part === 'jaw' || h.part === 'ltooth') { const ca = Math.cos(jaw), sa = Math.sin(jaw); const f2 = f * ca + s * sa, s2 = -f * sa + s * ca; f = f2; s = s2 - 0.3; }
+          const px = x + (F.x * f + U.x * s + S.x * h.w) * vs, py = y + (F.y * f + U.y * s + S.y * h.w) * vs, pz = z + (F.z * f + U.z * s + S.z * h.w) * vs;
+          let col, sz = vs;
+          if (h.part === 'eye') { const g = 1.6 + 1.2 * lc + c.yank; col = [g * 1.3, g * 0.95, 0.25]; sz = vs * 0.8; }
+          else if (h.part === 'tooth' || h.part === 'ltooth') { col = [0.95, 0.92, 0.85]; sz = vs * 0.45; }
+          else if (h.part === 'horn') { col = [0.85, 0.8, 0.68]; sz = vs * 0.75; }
+          else if (h.part === 'frill') { col = [0.6, 0.18, 0.12]; sz = vs * 0.8; }
+          else if (h.part === 'jaw') col = h.w === 0 ? [0.55, 0.15, 0.12] : [0.2, 0.36, 0.16];
+          else col = (h.f + h.s) % 2 ? [0.22, 0.42, 0.18] : [0.16, 0.32, 0.14];
+          headM.put(hi + j, px, py, pz, sz, col);
+        });
+      }
       return (t, c) => {
         const p = t / LOOP * TAU; twinkle(t);
-        rays.material.rotation = p / 7; halo.material.opacity = 0.3 + 0.2 * c.yank;
-        leafCells.forEach((l, i) => { const k = 0.6 + 0.4 * Math.sin(p * 2 + l.ph); leafM.put(i, l.x + RM * 0.15 * Math.sin(p + l.ph), l.y, l.z, 0.6, l.li % 3 ? [0.9 * k + 0.2, 0.7 * k + 0.1, 0.2] : [0.2, 0.7 * k + 0.2, 0.6 * k + 0.2]); }); leafM.flush();
-        let ri = 0; roots.forEach(r => { A.chain(E.x + r.x, E.y - 16.5, r.a, 26, 0.6, k => RM * 0.4 * (k / 26) * Math.sin(p * 2 + k * 0.3 + r.off)).forEach(([x, y]) => rootM.put(ri++, x, y, E.z, 0.7 - 0.015 * (ri % 26), [0.24, 0.17, 0.12])); }); rootM.flush();
-        eyeShell.update(cell => { const n = cell.n; const e = A.eyePix(n[0] / 0.9, n[1] / 0.9, c.open, c.gaze[0], c.gaze[1], iris, { pw: c.pupil }); return e || [0.3 + cell.nz * 0.1, 0.22, 0.15]; }, 1 + 0.02 * c.yank);
-        for (let i = 0; i < SN; i++) { const u = i / SN, y = -14 + u * 21, a = u * TAU * 3 + p, R = 4.6 + Math.max(0, (-y - 8) * 0.12); const sc = (i + Math.floor(t / LOOP * SN)) % 4 === 0; serp.put(i, E.x + Math.cos(a) * R, E.y + y, E.z + Math.sin(a) * R, 1.5 * (0.6 + 0.4 * Math.sin(u * Math.PI)), sc ? [0.55, 0.45, 0.2] : [0.14, 0.24, 0.12]); } serp.flush();
-        let ni = 0, hi = 0; necks.forEach((nk, j) => { const pts = A.chain(E.x + nk.bx, E.y + nk.by, nk.a, 12, 0.9, k => RM * (0.5 * (k / 16) * Math.sin(p * 2 + k * 0.4 + nk.off) - 0.06 * c.yank * k)); pts.forEach(([x, y], k) => neckM.put(ni++, x, y, E.z + 5, 1.15 - k * 0.02, k % 3 ? [0.32, 0.6, 0.28] : [0.8, 0.65, 0.3])); const [hx, hy, ha] = pts[pts.length - 1], jaw = 0.25 + 0.6 * c.yank + 0.15 * Math.max(0, Math.sin(p * 3 + j));
-          const cs = Math.cos(ha), sn = Math.sin(ha), at = (f, s) => [hx + cs * f - sn * s, hy + sn * f + cs * s];
-          [[0, 0], [0.8, 0], [1.6, 0], [0, 0.7], [0.8, 0.7]].forEach(([f, s]) => { const q = at(f, s * 0.6 + 0.2); headM.put(hi++, q[0], q[1], E.z + 5, 0.9, [0.3, 0.55, 0.26]); });
-          [[0.6, -0.4 - jaw], [1.4, -0.4 - jaw], [2.0, -0.3 - jaw]].forEach(([f, s]) => { const q = at(f, s); headM.put(hi++, q[0], q[1], E.z + 5, 0.75, [0.26, 0.46, 0.22]); });
-          [[1.5, 0.75], [1.5, -0.05]].forEach(([f, s]) => { const q = at(f, s); headM.put(hi++, q[0], q[1], E.z + 5.6, 0.45, [2.2, 1.4, 0.3]); });
-          [[2.1, -0.1], [2.1, -0.2 - jaw * 0.5], [1.7, -0.15], [1.7, -0.25 - jaw * 0.5]].forEach(([f, s]) => { const q = at(f, s); headM.put(hi++, q[0], q[1], E.z + 5.4, 0.3, [0.95, 0.92, 0.85]); });
-          const q = at(2.4 + jaw * 0.5, -0.2 - jaw * 0.3); headM.put(hi++, q[0], q[1], E.z + 5.3, [0.6, 0.15, 0.15], [0.9, 0.1, 0.12]); });
+        rays.material.rotation = p / 7; glow.material.opacity = 0.2 + 0.2 * c.yank;
+        body.update(cell => { const n = cell.n, lit = 0.35 + 0.65 * Math.max(0, n[1] * 0.3 + n[2] * 0.9);
+          if (n[2] > 0.45 && n[1] < 0.2) { const band = Math.floor((n[1] + 1) * 9) % 2; return band ? [0.62 * lit, 0.48 * lit, 0.22 * lit] : [0.5 * lit, 0.38 * lit, 0.18 * lit]; }
+          const sc = (Math.floor(n[0] * 14) + Math.floor(n[1] * 14)) % 2; return sc ? [(0.2 - cell.nz * 0.05) * lit, (0.38 - cell.nz * 0.06) * lit, (0.16) * lit] : [0.14 * lit, 0.28 * lit, 0.12 * lit]; }, 1 + RM * 0.02 * Math.sin(p * 2) + 0.03 * c.yank);
+        // wings
+        let bi = 0, mi = 0;
+        wings.forEach(w => {
+          const sx = E.x + w.side * 5.5, sy = E.y + 2.5, pts = w.fingers.map((fg, j) => { const flap = RM * (0.12 * Math.sin(p + j * 0.25) + 0.05 * c.yank); const a = fg.ang + w.side * flap; return Array.from({ length: WL }, (_, k) => { const f = (k + 1) / WL, bend = w.side * 0.08 * Math.sin(f * Math.PI); return [sx + Math.cos(a + bend) * fg.len * f, sy + Math.sin(a + bend) * fg.len * f]; }); });
+          pts.forEach((row, j) => row.forEach(([x, y], k) => boneM.put(bi++, x, y, E.z - 1.5, 0.5 - k * 0.015, [0.62, 0.55, 0.45])));
+          for (let j = 0; j < WF - 1; j++) for (let k = 0; k < WL; k++) for (let q = 1; q <= WS; q++) { const v = q / (WS + 1), sag = Math.sin(v * Math.PI) * (k / WL) * 1.2; const a = pts[j][k], b = pts[j + 1][k]; const x = a[0] + (b[0] - a[0]) * v, y = a[1] + (b[1] - a[1]) * v - sag; const vein = (q === Math.ceil(WS / 2)) && k % 2 === 0; membM.put(mi++, x, y, E.z - 2, 0.75, vein ? [0.55, 0.12, 0.12] : [0.28 + 0.06 * Math.sin(p * 2 + k * 0.4), 0.06, 0.1]); }
+        });
+        boneM.flush(); membM.flush();
+        // necks and heads
+        let ni = 0, hk = 0;
+        necks.forEach((nk, i) => {
+          const n = nk.stump ? 6 : NECK_N;
+          const pts = A.chain(E.x + nk.bx, E.y + nk.by, nk.a, n, nk.len, k => RM * (0.45 * (k / n) * Math.sin(p * 2 + k * 0.32 + nk.off) - (nk.a > Math.PI / 2 ? -1 : 1) * 0.004 * k * k) - c.yank * 0.035 * k * (nk.a > Math.PI / 2 ? -1 : 1));
+          pts.forEach(([x, y], k) => neckM.put(ni++, x, y, E.z + 1 + k * 0.18, (1.5 - k * 0.03) * nk.big, (k + Math.floor(t / LOOP * 40)) % 4 === 0 ? [0.55, 0.45, 0.2] : [0.18, 0.36, 0.16]));
+          for (let k = n; k < NECK_N; k++) neckM.put(ni++, 0, -999, 0, 0.01, [0, 0, 0]);
+          const [hx, hy, ha] = pts[pts.length - 1], hz = E.z + 1 + n * 0.18;
+          if (nk.stump) { // cauterised end, two small heads regrowing
+            neckM.put(ni - (NECK_N - n) - 1, hx, hy, hz, 1.5, [1.4 + 0.4 * Math.sin(p * 6), 0.5, 0.1]);
+            drawHead(hk * HEAD.length, hx - 0.4, hy + 0.6, hz + 0.3, ha + 0.5, t, c, i, 0.45); hk++;
+            drawHead(hk * HEAD.length, hx + 0.4, hy + 0.6, hz + 0.3, ha - 0.5, t, c, i + 3, 0.45); hk++;
+          } else { drawHead(hk * HEAD.length, hx, hy, hz, ha, t, c, i, nk.big); hk++; }
+        });
+        for (; hk < NHEADS; hk++) HEAD.forEach((h, j) => headM.put(hk * HEAD.length + j, 0, -999, 0, 0.01, [0, 0, 0]));
         neckM.flush(); headM.flush();
-        cStars.forEach((s, i) => { const k = 0.6 + 0.6 * Math.max(0, Math.sin(p * (1 + i % 3) + i)); cStarM.put(i, s[0], s[1], s[2], 1.6, [k * 1.4, k * 1.3, k]); }); cStarM.flush();
-        heads.forEach(h => { const o = c.lc; h.sh.cz = h.z; h.sh.cy = h.y + RM * Math.sin(p + h.off * 6) * 0.8; h.sh.update(cell => { const n = cell.n, lit = 0.35 + 0.65 * Math.max(0, n[1] * 0.3 + n[2] * 0.9); for (const sx of [-0.35, 0.35]) { const e = n[2] > 0.3 ? A.eyePix((n[0] - sx) / 0.25, (n[1] - 0.12) / 0.25, o, 0, 0, [1.4, 0.9, 0.3], { round: true, lid: [0.3, 0.3, 0.28] }) : null; if (e) return e; } if (n[2] > 0.6 && Math.abs(n[0]) < 0.08 && n[1] < 0.05 && n[1] > -0.3) return [0.35 * lit, 0.34 * lit, 0.32 * lit]; return [(0.62 - cell.nz * 0.15) * lit, (0.6 - cell.nz * 0.15) * lit, (0.55 - cell.nz * 0.12) * lit]; }, 1); });
-        A.drawReach(reach, t, c.yank); A.drawVeins(veins, t, c.yank, [0.35, 0.28, 0.08], [1.8, 1.4, 0.4]); A.drawParticles(leavesFall, t);
+        // tail
+        let tx = E.x + 2, ty = E.y - 5, ta = -Math.PI / 2;
+        for (let k = 0; k < 46; k++) { ta += 0.11 + RM * 0.05 * Math.sin(p * 2 + k * 0.2); tx += Math.cos(ta) * 0.9; ty += Math.sin(ta) * 0.9; tailM.put(k, tx, ty, E.z + 2, 1.6 - k * 0.03, k % 4 === 0 ? [0.55, 0.45, 0.2] : [0.18, 0.36, 0.16]); }
+        tailM.flush();
+        let ci = 0; cols.forEach(cl => { const ang = cl.r + RM * 0.15 * Math.sin(p + cl.off), cs = Math.cos(ang), sn = Math.sin(ang), yb = cl.y + RM * Math.sin(p + cl.off) * 1.2; cl.cells.forEach(q => colM.put(ci++, cl.x + q[0] * cs - q[1] * sn, yb + q[0] * sn + q[1] * cs, cl.z + q[2], 0.55, A.H(q[3]))); }); colM.flush();
+        cStars.forEach((s, i) => { const k = 0.6 + 0.6 * Math.max(0, Math.sin(p * (1 + i % 3) + i)); cStarM.put(i, s[0], s[1], s[2], 1.6, [k * 1.2, k * 1.4, k]); }); cStarM.flush();
+        A.drawReach(reach, t, c.yank); A.drawVeins(veins, t, c.yank, [0.15, 0.3, 0.1], [0.8, 1.8, 0.4]); A.drawParticles(mist, t); A.drawParticles(torch, t);
       };
     },
   };
@@ -461,8 +508,11 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
         const open = Math.max(0.05 + 0.15 * c.yank, c.lc) * c.open;
         head.update(cell => { const n = cell.n, lit = 0.4 + 0.6 * Math.max(0, n[1] * 0.25 + n[2] * 0.9);
           if (n[2] > 0.2) { const e = A.eyePix(n[0] / 0.55, (n[1] + 0.05) / 0.55, open, c.gaze[0], c.gaze[1], iris, { human: true, pw: 0.1 + 0.05 * c.yank, lid: [0.55, 0.3, 0.3], sclera: [0.95, 0.9, 0.86] }); if (e) return e; }
-          const vein = Math.abs(cell.w) < 0.07 && n[1] > -0.4; return vein ? [0.3 * lit, 0.35 * lit, 0.75 * lit] : [(0.95 - cell.nz * 0.12) * lit, (0.68 - cell.nz * 0.1) * lit, (0.62 - cell.nz * 0.1) * lit]; }, 1 + RM * 0.02 * Math.sin(p * 2) + 0.03 * c.yank);
-        orb.update(cell => { const s = Math.sin(p * 2 + cell.n[0] * 9 + cell.n[1] * 7 + cell.nz * 6); if (Math.abs(cell.n[2]) > 0.35 ? s < 0.96 : s < 0.5) return null; return [1.1 * Math.max(0.3, s), 0.62 * Math.max(0.3, s), 0.25 * Math.max(0.3, s)]; }, 1 + RM * 0.012 * Math.sin(p * 2 + 1));
+          const beat = 0.75 + 0.25 * Math.pow(Math.max(0, Math.sin(p * 8)), 8) + 0.3 * c.yank;
+          const v1 = Math.abs(Math.sin(n[0] * 13 + Math.sin(n[1] * 9) * 1.6)) < 0.07, v2 = Math.abs(Math.sin(n[1] * 15 + Math.sin(n[0] * 7) * 2.2)) < 0.06, v3 = Math.abs(Math.sin(Math.atan2(n[1], n[0]) * 9 + Math.hypot(n[0], n[1]) * 14)) < 0.08 && Math.hypot(n[0], n[1] + 0.05) > 0.5;
+          const vein = v1 || v2 || v3 || Math.abs(cell.w) < 0.07; if (vein) return (v3 ? [0.7 * beat * lit, 0.15 * lit, 0.22 * lit] : [0.32 * lit, 0.38 * lit, 0.85 * beat * lit]);
+          return [(0.95 - cell.nz * 0.12) * lit, (0.68 - cell.nz * 0.1) * lit, (0.62 - cell.nz * 0.1) * lit]; }, 1 + RM * 0.02 * Math.sin(p * 2) + 0.03 * c.yank);
+        orb.update(cell => { const s = Math.sin(p * 2 + cell.n[0] * 9 + cell.n[1] * 7 + cell.nz * 6); if (cell.n[2] > 0.28 || s < 0.45) return null; return [1.1 * Math.max(0.3, s), 0.62 * Math.max(0.3, s), 0.25 * Math.max(0.3, s)]; }, 1 + RM * 0.012 * Math.sin(p * 2 + 1));
         let di = 0; spires.forEach(s => { for (let k = 0; k < 90; k++) { const y = -40 + k * 1.0, a = k * 0.28 + p + s.off; for (const sg of [0, Math.PI]) dnaM.put(di++, s.x + Math.cos(a + sg) * 3, y, s.z + Math.sin(a + sg) * 3, 0.9, sg ? [0.35, 0.55, 0.9] : [0.9, 0.45, 0.35]); if (k % 3 === 0) for (let r = 1; r <= 6; r++) { const u = r / 7 * 2 - 1; dnaM.put(di++, s.x + Math.cos(a) * 3 * u, y, s.z + Math.sin(a) * 3 * u, 0.45, [0.6, 0.6, 0.55]); } } }); dnaM.flush();
         skulls.forEach(s => { s.sh.cy = s.y + RM * Math.sin(p + s.off * 6) * 0.9; s.sh.update(cell => { const n = cell.n, lit = 0.35 + 0.65 * Math.max(0, n[1] * 0.3 + n[2] * 0.9); if (n[2] > 0.3) { for (const sx of [-0.33, 0.33]) if (((n[0] - sx) / 0.2) ** 2 + ((n[1] - 0.05) / 0.17) ** 2 < 1) return c.lc > 0.5 ? [1.6, 0.4, 0.2] : [0.03, 0.02, 0.02]; if (Math.abs(n[0]) < 0.08 && n[1] < -0.12 && n[1] > -0.32) return [0.04, 0.03, 0.03]; if (n[1] < -0.45 && n[1] > -0.58 && Math.abs(n[0]) < 0.35) return Math.round(n[0] * 18) % 2 ? [0.9, 0.86, 0.75] : [0.1, 0.08, 0.06]; } return [(0.78 - cell.nz * 0.15) * lit, (0.72 - cell.nz * 0.15) * lit, (0.6 - cell.nz * 0.12) * lit]; }, 1); });
         cords.forEach(cd => A.drawReach(cd, t, c.yank)); A.drawVeins(veins, t, c.yank, [0.3, 0.12, 0.12], [1.6, 0.5, 0.4]); A.drawParticles(motes, t); A.drawParticles(fire, t);
@@ -470,64 +520,89 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
     },
   };
 
-  // ---------------- ANIME: the Celestial Titan ----------------
+  // ---------------- ANIME: the Pale Giant (crucified humanoid, seven-eyed mask, wings of light, the twin-pronged spear) ----------------
   THEMES.anime = {
     sub: 'Power level: unfathomable',
     menu: [['New Branch', 'Episode 1 is still in production. Since 1998.'], ['Continue', 'Previously on Strange Branches: you lost.'], ['Bestiary', 'Locked. Scream its name louder.'], ['Options', 'Difficulty: final arc. There is only one setting.'], ['Quit', 'Get in the robot. You cannot quit.']],
-    bg: '#07040c', tint: [1.1, 0.75, 1.05], exposure: 1.0, light: '#4ad8ff',
+    bg: '#07040c', tint: [1.1, 0.75, 1.05], exposure: 1.0, light: '#ff4a6a',
     build(A) {
-      const E = A.V3(0, 12, -42), list = [];
+      const E = A.V3(0, 9, -42), list = [];
       A.sprite('#3a0a2a', 170, 0.75, null, true).position.set(-40, 35, -180); A.sprite('#0a2a3a', 140, 0.6, null, true).position.set(60, 25, -175);
-      const moon = A.sprite('#ff3a4a', 90, 0.85, A.discTex, true); moon.position.set(0, 20, -190);
-      const rays = A.sprite('#7af0ff', 80, 0.18, A.rayTex); rays.position.set(E.x, E.y + 6, E.z - 6);
+      const moon = A.sprite('#ff3a4a', 95, 0.85, A.discTex, true); moon.position.set(0, 18, -190);
+      const rays = A.sprite('#ffd0e0', 85, 0.16, A.rayTex); rays.position.set(E.x, E.y + 6, E.z - 6);
       const twinkle = A.stars('#ffd0f0');
-      // the titan: armoured torso, arms flung wide, one visor eye; body trails off into ribbons
-      const titan = new THREE.Group(); A.scene.add(titan); const tl = [], s = 0.9;
-      const body = (x0, x1, y0, y1, z0, z1, col) => { for (let x = x0; x <= x1; x += s) for (let y = y0; y <= y1; y += s) for (let z = z0; z <= z1; z += s) tl.push([E.x + x, E.y + y, E.z + z, typeof col === 'function' ? col(x, y, z) : col, s]); };
-      const armor = (x, y) => (Math.abs(x) < 0.5 || Math.abs(y - 2) < 0.5) ? '#b0182a' : pal(['#e8e4ec', '#d8d4e0', '#c8c4d2']);
-      body(-4.5, 4.5, -6, 4, -1.5, 1.5, armor); body(-3.2, 3.2, -10, -6.5, -1, 1, (x, y) => pal(['#c8c4d2', '#b8b4c4'])); body(-6.5, -4.5, 2, 4.5, -1.5, 1.5, '#d8d4e0'); body(4.5, 6.5, 2, 4.5, -1.5, 1.5, '#d8d4e0');
-      body(-18, -6.5, 2.4, 3.6, -0.6, 0.6, (x) => Math.abs(x + 12) < 0.5 ? '#b0182a' : '#e0dcea'); body(6.5, 18, 2.4, 3.6, -0.6, 0.6, (x) => Math.abs(x - 12) < 0.5 ? '#b0182a' : '#e0dcea');
-      body(-21, -18, 1.5, 4.5, -0.6, 0.6, '#2a2430'); body(18, 21, 1.5, 4.5, -0.6, 0.6, '#2a2430');
-      body(-2.6, 2.6, 4.5, 9, -2.2, 2.2, (x, y) => y > 8 ? '#2a2430' : '#e8e4ec'); body(-3.4, -2.6, 7, 11, -0.4, 0.4, '#e8e4ec'); body(2.6, 3.4, 7, 11, -0.4, 0.4, '#e8e4ec');
-      tl.forEach(v => { if (typeof v[3] === 'string') { const c = A.H(v[3]), k = 0.55 + 0.45 * Math.min(1, Math.max(0, (v[1] - E.y + 10) / 20)); v[3] = A.scl(c, k); } }); A.stat(tl, false, titan);
-      const visor = A.dyn(60, false, titan); const vCells = []; for (let i = -6; i <= 6; i++) for (let j = -1; j <= 1; j++) vCells.push([i, j]);
-      const ribbons = Array.from({ length: 8 }, (_, i) => ({ x: (i - 3.5) * 0.9, off: rnd() * TAU })); const ribM = A.dyn(8 * 30, false, titan);
-      const halo = Array.from({ length: 64 }, (_, i) => i); const haloM = A.dyn(64 * 2 + 12);
-      // crystalline wings
-      const wings = []; for (const side of [-1, 1]) for (let w = 0; w < 3; w++) for (let j = 0; j < 6; j++) wings.push({ side, w, j, base: (side > 0 ? 0 : Math.PI) + side * (0.7 - w * 0.45), spread: side * (j - 2.5) * 0.08, len: 9 + (2.5 - Math.abs(j - 2.5)) * 1.6, off: rnd() * TAU });
-      const wingM = A.dyn(wings.length * 24);
-      // floating torii gates and cel clouds
-      const torii = [[-40, 20, -110, 1.6], [46, 12, -120, 1.8], [-24, -8, -90, 1.2], [30, 34, -150, 2.2], [-58, 2, -140, 2]].map(([x, y, z, k]) => ({ x, y, z, k, off: rnd() * TAU, cells: [] }));
+
+      // ----- the giant: built from soft capsules at voxel size 0.5, baked pale-skin shading -----
+      const giant = new THREE.Group(); A.scene.add(giant); const gl = [], vs = 0.5;
+      const skin = (x, y, z, f) => { const k = 0.55 + 0.45 * Math.min(1, Math.max(0, z / 2.5 + 0.4)) + 0.08 * Math.sin(x * 0.7 + y * 0.5); return [0.96 * k * f, 0.9 * k * f, 0.9 * k * f]; };
+      function cap(a, b, ra, rb, zs, colFn) { const P0 = A.V3(...a), P1 = A.V3(...b), n = Math.ceil(P0.distanceTo(P1) / (vs * 0.7)); const seen = new Set();
+        for (let i = 0; i <= n; i++) { const u = i / n, P = P0.clone().lerp(P1, u), r = ra + (rb - ra) * u; for (let x = -r; x <= r + 1e-6; x += vs) for (let y = -r; y <= r + 1e-6; y += vs) for (let z = -r * zs; z <= r * zs + 1e-6; z += vs) { const d = (x * x + y * y) / (r * r) + (z * z) / (r * r * zs * zs); if (d > 1.02 || d < 0.55) continue; const X = Math.round((P.x + x) / vs) * vs, Y = Math.round((P.y + y) / vs) * vs, Z = Math.round((P.z + z) / vs) * vs, key = X + ',' + Y + ',' + Z; if (seen.has(key)) continue; seen.add(key); gl.push([E.x + X, E.y + Y, E.z + Z, (colFn || skin)(X, Y, Z, 1), vs]); } } }
+      // torso: chest, ribs, waist, pelvis
+      cap([0, 5.5, 0], [0, 1.5, 0], 3.4, 2.6, 0.62); cap([0, 1.5, 0], [0, -2.5, 0], 2.6, 2.4, 0.6); cap([0, -2.5, 0], [0, -4.5, 0], 2.6, 2.2, 0.62);
+      for (let r = 0; r < 5; r++) for (const s of [-1, 1]) for (let k = 0; k <= 6; k++) { const a = k / 6 * 1.1; gl.push([E.x + s * (0.6 + Math.sin(a) * 2.3), E.y + 4.2 - r * 0.85 - (1 - Math.cos(a)) * 0.6, E.z + 1.7 - Math.sin(a) * 0.5, [0.7, 0.62, 0.64], vs * 0.8]); }
+      cap([0, 6.2, 0], [0, 7.6, 0], 1.1, 1.0, 1); // neck
+      cap([-3.2, 5.6, 0], [-5.4, 5.8, 0], 1.5, 1.2, 0.8); cap([3.2, 5.6, 0], [5.4, 5.8, 0], 1.5, 1.2, 0.8); // shoulders
+      // arms flung wide, forearms, hands with fingers
+      for (const s of [-1, 1]) {
+        cap([s * 5.4, 5.8, 0], [s * 11, 6.4, 0], 1.15, 0.9, 1); cap([s * 11, 6.4, 0], [s * 16.5, 7.0, 0.3], 0.9, 0.65, 1);
+        cap([s * 16.5, 7.0, 0.3], [s * 17.8, 7.1, 0.4], 0.75, 0.6, 0.6);
+        [[0.9, 0.35], [0.5, 0.15], [0.1, 0], [-0.3, -0.15], [-0.7, -0.6]].forEach(([dy, bend], j) => { const L = j === 4 ? 1.3 : 2.1 - Math.abs(j - 1.5) * 0.25; cap([s * 17.9, 7.1 + dy * 0.9, 0.4], [s * (17.9 + L), 7.1 + dy * 0.9 - 0.4 - bend, 0.6], 0.32, 0.24, 1); });
+      }
+      // legs, dissolving into the void
+      for (const s of [-1, 1]) { cap([s * 1.4, -4.5, 0], [s * 1.8, -11, 0.2], 1.6, 1.1, 1); cap([s * 1.8, -11, 0.2], [s * 1.6, -16, 0.4], 1.1, 0.7, 1, (x, y, z) => { const f = Math.max(0, (y + 16) / 5); return [0.9 * f + 0.3, 0.85 * f + 0.2, 0.86 * f + 0.25]; }); }
+      // head: skull shape with a cracked pale mask (seven eyes painted onto it every frame)
+      cap([0, 8.2, 0], [0, 10.2, 0.2], 2.0, 2.0, 0.9);
+      gl.forEach(v => { if (Math.abs(v[0] - E.x) < 0.3 && v[1] > E.y - 4 && v[1] < E.y + 5.5 && v[2] > E.z + 1) v[3] = [0.55, 0.45, 0.48]; }); // sternum line
+      A.stat(gl, false, giant);
+      // mask: seven eyes in a downward triangle, plus a blood-red crack
+      const MASK_EYES = [[-1.0, 1.0], [0, 1.25], [1.0, 1.0], [-0.65, 0.35], [0.65, 0.35], [0, -0.1], [0, 0.65]];
+      const maskEyes = A.eyes(MASK_EYES.length, 0.42, 0.12);
+      const maskM = A.dyn(80, false, giant); const maskCells = []; for (let i = -6; i <= 6; i++) for (let j = -3; j <= 5; j++) { const u = i / 6, v = (j - 1) / 4; if (u * u + v * v * 0.8 < 1) maskCells.push([i * 0.33, j * 0.33]); }
+      // wings of light, a rotating halo, ribbons from the legs
+      const wings = []; for (const side of [-1, 1]) for (let w = 0; w < 3; w++) for (let j = 0; j < 7; j++) wings.push({ side, w, j, base: (side > 0 ? 0 : Math.PI) + side * (0.9 - w * 0.5), spread: side * (j - 3) * 0.07, len: 11 + (3 - Math.abs(j - 3)) * 1.8, off: rnd() * TAU });
+      const wingM = A.dyn(wings.length * 26);
+      const haloM = A.dyn(64 * 2);
+      const ribbons = Array.from({ length: 10 }, (_, i) => ({ x: (i - 4.5) * 0.7, off: rnd() * TAU })); const ribM = A.dyn(10 * 26, false, giant);
+      // the twin-pronged spear: a long shaft splitting into two helical tines, driven into the void behind the island
+      const sp = [], A0 = A.V3(E.x - 8, E.y - 13, E.z + 9), B0 = A.V3(E.x + 7, E.y + 15, E.z - 7), dir = B0.clone().sub(A0), L = dir.length(); dir.normalize();
+      const side = A.V3().crossVectors(dir, A.V3(0, 0, 1)).normalize(), bin = A.V3().crossVectors(dir, side).normalize();
+      for (let d = 0; d < L * 0.78; d += 0.35) { const P = A0.clone().addScaledVector(dir, d); sp.push([P.x, P.y, P.z, [0.66 + (Math.floor(d / 1.2) % 2) * 0.08, 0.05, 0.08], 0.62]); }
+      for (let k = 0; k < 46; k++) { const d = L * 0.78 + k * 0.32, open = Math.min(1, k / 14) * 1.3, tw = k * 0.3; for (const s of [-1, 1]) { const P = A0.clone().addScaledVector(dir, d).addScaledVector(side, s * open + Math.sin(tw * s) * 0.35).addScaledVector(bin, Math.cos(tw) * 0.35 * s); sp.push([P.x, P.y, P.z, [0.75, 0.06, 0.1], 0.5]); } }
+      for (let k = 0; k < 18; k++) sp.push([E.x - 0.2 + (rnd() - 0.5) * 1.6, E.y + 3 - k * 0.45, E.z + 2.1, [0.55 + rnd() * 0.2, 0.02, 0.05], 0.42]); // blood running from the wound
+      A.stat(sp, false);
+      // floating torii and cel clouds
+      const torii = [[-42, 22, -110, 1.6], [48, 12, -120, 1.8], [-26, -8, -90, 1.2], [32, 34, -150, 2.2], [-60, 2, -140, 2]].map(([x, y, z, k]) => ({ x, y, z, k, off: rnd() * TAU, cells: [] }));
       torii.forEach(g => { const k = g.k; for (let y = 0; y < 7; y += 0.7) for (const x of [-2.5, 2.5]) g.cells.push([x * k, y * k, '#c0202a']); for (let x = -4; x <= 4; x += 0.7) { g.cells.push([x * k, 7 * k, '#1a1418']); g.cells.push([x * k * 0.8, 5.6 * k, '#c0202a']); } });
       const toriiM = A.dyn(torii.reduce((a, g) => a + g.cells.length, 0));
       for (let i = 0; i < 9; i++) { const cx = (rnd() - 0.5) * 160, cy = -20 + rnd() * 18, cz = -100 - rnd() * 60, w = 14 + rnd() * 20; for (let x = -w; x <= w; x += 2.2) for (let y = 0; y < 3 + rnd() * 3; y += 2.2) list.push([cx + x, cy + y + Math.abs(Math.sin(x * 0.3)) * 2, cz, y > 2 ? '#2a1a3a' : '#1a1028', 2.4]); }
-      // giant katana stuck in the void behind the island
-      for (let y = -14; y < 8; y += 0.6) list.push([7.5, y, -16, y > 5 ? '#2a1418' : [0.75 + (y + 14) * 0.008, 0.78, 0.85], [0.35, 0.65, 0.3]]); for (let x = -1.4; x <= 1.4; x += 0.4) list.push([7.5 + x, 5, -16, '#c8a03a', 0.45]);
       A.island(list, { top: ['#3a3a48', '#34344a', '#40404e', '#4a2a3a'], mid: ['#2a2434', '#241f2c'], deep: ['#1a1622', '#16121c'] });
-      // a torii and stone lanterns on the island
-      for (let y = 0; y < 4; y += 0.4) for (const x of [-1.8, 1.8]) list.push([x + 0.5, y, -4.6, '#c0202a', 0.4]); for (let x = -2.6; x <= 3.6; x += 0.4) { list.push([x, 4, -4.6, '#1a1418', 0.45]); list.push([x * 0.85 + 0.1, 3.3, -4.6, '#c0202a', 0.35]); }
+      for (let y = 0; y < 2.6; y += 0.4) for (const x of [-1.1, 1.1]) list.push([x + 4.2, y, -2.8, '#c0202a', 0.36]); for (let x = -1.7; x <= 1.7; x += 0.36) { list.push([x + 4.2, 2.6, -2.8, '#1a1418', 0.4]); list.push([x * 0.85 + 4.2, 2.1, -2.8, '#c0202a', 0.3]); }
       const lanterns = [[3.6, 1.2], [-4.2, -0.6], [4.4, -2.6]]; lanterns.forEach(([x, z]) => { for (let y = 0; y < 1.4; y += 0.25) list.push([x, y, z, '#6a6a72', 0.3]); list.push([x, 1.5, z, '#8a8a92', [0.6, 0.15, 0.6]]); });
       const lanternM = A.dyn(lanterns.length);
-      const seal = A.makeReach({ points: [A.V3(E.x + 2, E.y - 10, E.z + 3), A.V3(3, 2, -24), A.V3(0, 1.0, -8), A.V3(-2.2, 0.35, -0.8)], base: [0.1, 0.5, 0.7], glow: [0.8, 2.0, 2.4], r0: 0.4, r1: 0.12, stripe: 4, stripeCol: [1.6, 0.4, 1.4] });
+      const seal = A.makeReach({ points: [A.V3(E.x + 1.5, E.y - 12, E.z + 3), A.V3(3, 2, -24), A.V3(0, 1.0, -8), A.V3(-2.2, 0.35, -0.8)], base: [0.5, 0.06, 0.1], glow: [2.0, 0.4, 0.6], r0: 0.4, r1: 0.12, stripe: 4, stripeCol: [1.8, 1.4, 1.6] });
       const veins = A.makeVeins(A.V3(-2.2, 0, -0.8));
-      const petals = A.makeParticles({ type: 'fall', n: 240, x: [-32, 32], y: [-8, 38], z: [-40, 8], cols: ['#ffb0d0', '#ff8ab8', '#ffd0e4', '#ffffff'], size: 0.16, sway: 1.1, spin: true });
-      const sparks = A.makeParticles({ type: 'rise', n: 40, x: [-2.6, -1.2], y: [0, 2.4], z: [1.6, 2.8], cols: ['#7af0ff', '#ffffff', '#ff8ad8'], size: 0.08, sway: 0.2, speeds: 3, fade: true });
-      A.buildFigure({ armor: ['#e8e4ec', '#d8d4e0', '#cfcad8'], legs: () => pal(['#1a1620', '#24202c']), headCol: () => pal(['#1a1418', '#241c22']), coil: '#4ad0e0',
+      const petals = A.makeParticles({ type: 'fall', n: 220, x: [-32, 32], y: [-8, 38], z: [-40, 8], cols: ['#ffb0d0', '#ff8ab8', '#ffd0e4', '#ffffff'], size: 0.16, sway: 1.1, spin: true });
+      const crosses = A.makeParticles({ type: 'rise', n: 14, x: [-30, 30], y: [-10, 30], z: [-60, -30], cols: ['#ffd0a0'], size: 0.7, sway: 0.2, fade: true });
+      A.buildFigure({ armor: ['#e8e4ec', '#d8d4e0', '#cfcad8'], legs: () => pal(['#1a1620', '#24202c']), headCol: () => pal(['#1a1418', '#241c22']), coil: '#c0203a',
         props: (seg, push) => { seg([-0.5, 0, 1.0], [-0.5, 0.55, 0.96], 0.03, '#c8d0dc'); seg([-0.5, 0.55, 0.96], [-0.5, 0.75, 0.95], 0.04, '#1a1418'); push(0.95, 0.04, 1.3, '#c8d0dc'); push(1.05, 0.04, 1.42, '#c8d0dc'); } });
       const scarf = A.dyn(18, false, A.figGroup);
       A.stat(list, true);
-      const iris = [0.3, 0.9, 1.0];
+      const iris = [1.0, 0.25, 0.3];
       return (t, c) => {
         const p = t / LOOP * TAU; twinkle(t);
-        titan.position.y = RM * Math.sin(p) * 0.5 + c.yank * 0.3; rays.material.rotation = p / 7; moon.material.opacity = 0.8 + 0.1 * Math.sin(p * 2);
-        vCells.forEach(([i, j], k) => { const u = i / 6, v = j / 1.4; const e = A.eyePix(u, v, c.open, c.gaze[0] * 1.4, 0, iris, { pw: c.pupil, lid: [0.1, 0.08, 0.12], sclera: [0.15, 0.2, 0.3] }) || [0.12, 0.1, 0.14]; visor.put(k, E.x + i * 0.4, E.y + 7.2 + j * 0.4, E.z + 2.4, 0.42, e); }); visor.flush();
-        let ri = 0; ribbons.forEach(r => { A.chain(E.x + r.x, E.y - 10, -Math.PI / 2, 30, 0.6, k => RM * 0.5 * (k / 30) * Math.sin(p * 2 + k * 0.3 + r.off)).forEach(([x, y], k) => ribM.put(ri++, x, y, E.z, 0.7 - k * 0.015, k % 6 === 0 ? [0.8, 0.1, 0.18] : [0.85, 0.83, 0.9])); }); ribM.flush();
-        let hi = 0; for (let k = 0; k < 64; k++) { const a = k / 64 * TAU + p / 4, gap = (k % 8) === 0; if (!gap) haloM.put(hi++, E.x + Math.cos(a) * 7, E.y + 7.5 + titan.position.y + Math.sin(a) * 7, E.z - 1.5, 0.55, k % 8 === 4 ? [2.2, 1.8, 0.6] : [1.2, 1.0, 0.5]); const b = -k / 64 * TAU + p / 4; haloM.put(hi++, E.x + Math.cos(b) * 8.6, E.y + 7.5 + titan.position.y + Math.sin(b) * 8.6, E.z - 1.6, 0.3, [0.5, 1.4, 1.6]); } for (; hi < 64 * 2 + 12; hi++) haloM.put(hi, 0, -999, 0, 0.01, [0, 0, 0]); haloM.flush();
-        let wi = 0; wings.forEach(w => { const flap = RM * (0.1 * Math.sin(p + w.w * 0.7) + 0.03 * Math.sin(3 * p + w.off)), a = w.base + w.spread + w.side * flap, rx = E.x + w.side * 5.5, ry = E.y + 3 + titan.position.y; for (let k = 0; k < 24; k++) { const f = k / 24, hue = (f + p / TAU + w.j * 0.05) % 1, col = hue < 0.5 ? A.mix([0.4, 1.6, 2.0], [1.8, 0.5, 1.6], hue * 2) : A.mix([1.8, 0.5, 1.6], [0.4, 1.6, 2.0], (hue - 0.5) * 2); wingM.put(wi++, rx + Math.cos(a) * w.len * f, ry + Math.sin(a) * w.len * f, E.z + 0.5 + w.w * 0.3, 0.55 * (1 - f * 0.6), A.scl(col, 0.6 + 0.4 * f)); } }); wingM.flush();
+        const bob = RM * Math.sin(p) * 0.5 + c.yank * 0.3; giant.position.y = bob;
+        rays.material.rotation = p / 7; moon.material.opacity = 0.8 + 0.1 * Math.sin(p * 2);
+        // mask: pale plate with a crack, then the seven eyes
+        maskCells.forEach(([x, y], k) => { const crack = Math.abs(x - 0.25 * Math.sin(y * 3)) < 0.17 && y < 0.6; maskM.put(k, E.x + x, E.y + 9.4 + y, E.z + 2.05, 0.34, crack ? [0.7, 0.05, 0.08] : [0.32, 0.22, 0.4]); }); maskM.flush();
+        MASK_EYES.forEach(([x, y], k) => maskEyes.draw(k, E.x + x, E.y + 9.4 + y + bob, E.z + 2.3, c.open * Math.max(0.15, A.lidAt(t, k * 0.13)), c.gaze[0] * 0.8, c.gaze[1] * 0.8, iris, { pw: c.pupil, lid: [0.2, 0.1, 0.25], skin: [0.32, 0.22, 0.4] }));
+        maskEyes.flush();
+        let ri = 0; ribbons.forEach(r => { A.chain(E.x + r.x, E.y - 15, -Math.PI / 2, 26, 0.6, k => RM * 0.5 * (k / 26) * Math.sin(p * 2 + k * 0.3 + r.off)).forEach(([x, y], k) => ribM.put(ri++, x, y, E.z, 0.55 - k * 0.012, k % 7 === 0 ? [0.85, 0.15, 0.2] : [0.9, 0.86, 0.9])); }); ribM.flush();
+        let hi = 0; for (let k = 0; k < 64; k++) { const a = k / 64 * TAU + p / 4, b = -k / 64 * TAU + p / 4; haloM.put(hi++, E.x + Math.cos(a) * 4.2, E.y + 9.4 + bob + Math.sin(a) * 4.2, E.z - 1.2, (k % 8) ? 0.42 : 0.01, k % 8 === 4 ? [2.2, 1.8, 0.6] : [1.3, 1.05, 0.5]); haloM.put(hi++, E.x + Math.cos(b) * 5.4, E.y + 9.4 + bob + Math.sin(b) * 5.4, E.z - 1.3, 0.24, [1.6, 0.5, 0.8]); } haloM.flush();
+        let wi = 0; wings.forEach(w => { const flap = RM * (0.1 * Math.sin(p + w.w * 0.7) + 0.03 * Math.sin(3 * p + w.off)), a = w.base + w.spread + w.side * flap, rx = E.x + w.side * 4, ry = E.y + 5 + bob; for (let k = 0; k < 26; k++) { const f = k / 26, hue = (f + p / TAU + w.j * 0.05) % 1, col = hue < 0.5 ? A.mix([2.0, 1.7, 1.9], [1.6, 0.4, 0.9], hue * 2) : A.mix([1.6, 0.4, 0.9], [2.0, 1.7, 1.9], (hue - 0.5) * 2); wingM.put(wi++, rx + Math.cos(a) * w.len * f, ry + Math.sin(a) * w.len * f, E.z - 2 + w.w * 0.3, 0.55 * (1 - f * 0.6), A.scl(col, 0.45 + 0.4 * f)); } }); wingM.flush();
         let ti = 0; torii.forEach(g => { const y = g.y + RM * Math.sin(p + g.off) * 1.2; g.cells.forEach(cl => toriiM.put(ti++, g.x + cl[0], y + cl[1], g.z, 0.75 * g.k, A.H(cl[2]))); }); toriiM.flush();
         lanterns.forEach(([x, z], i) => lanternM.put(i, x, 1.2, z, 0.35, [1.8 + 0.4 * Math.sin(p * 5 + i), 1.2, 0.5])); lanternM.flush();
         for (let k = 0; k < 18; k++) { const r = Math.floor(k / 3), cc = k % 3; scarf.put(k, -0.1 + cc * 0.1 + RM * Math.sin(p * 4 + r) * 0.04 * r, 1.12 - r * 0.02 + RM * Math.sin(p * 3 + r * 0.7) * 0.03 * r, 0.3 - r * 0.14, 0.1, [0.8, 0.08, 0.12]); } scarf.flush();
-        A.drawReach(seal, t, c.yank); A.drawVeins(veins, t, c.yank, [0.1, 0.25, 0.4], [0.6, 1.6, 2.0]); A.drawParticles(petals, t); A.drawParticles(sparks, t);
+        A.drawReach(seal, t, c.yank); A.drawVeins(veins, t, c.yank, [0.35, 0.05, 0.1], [2.0, 0.4, 0.6]); A.drawParticles(petals, t); A.drawParticles(crosses, t);
       };
     },
   };
@@ -563,6 +638,15 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
       const threads = [0, 1, 2].map(k => A.makeReach({ n: 100, points: [A.V3(E.x + (k - 1) * 3, E.y - 2, E.z + 6), A.V3(2 + k, 1 + k * 0.5, -22), A.V3(-1 + k * 0.6, 0.8, -8), A.V3(-2.2 + k * 0.2, 0.3, -0.8)], base: [0.45, 0.42, 0.3], glow: [1.4, 1.6, 0.5], r0: 0.22, r1: 0.06, target: () => A.local(k === 0 ? A.J.lAnkle : k === 1 ? A.J.lKnee : A.J.pelvis) }));
       const veins = A.makeVeins(A.V3(-2.2, 0, -0.8));
       const spores = A.makeParticles({ type: 'rise', n: 320, x: [-30, 30], y: [-12, 36], z: [-46, 6], cols: ['#d8f07a', '#b0d050', '#f0f0a0'], size: 0.13, sway: 0.8, fade: true });
+      // parasites drifting at the edges: wriggling worms, pulsing banded sacs, spore-jellies trailing hyphae
+      const worms = [[-26, 9, -24, 1], [27, 3, -26, -1], [-33, -4, -34, 1], [34, 15, -38, -1], [-44, 30, -62, 1]].map(([x, y, z, d]) => ({ x, y, z, d, off: rnd() * TAU }));
+      const wormM = A.dyn(worms.length * 30);
+      const SAC = []; for (let i = -4; i <= 4; i++) for (let j = -2; j <= 2; j++) for (let k = -2; k <= 2; k++) { const u = i / 4.5, v = j / 2.5, w = k / 2.5; if (u * u + v * v + w * w <= 1) SAC.push([i * 0.5, j * 0.5, k * 0.5, i]); }
+      const sacs = [[-40, 20, -62, 0.4], [38, 24, -66, -0.5], [-22, 32, -84, 0.2], [46, -6, -70, 0.9]].map(([x, y, z, r]) => ({ x, y, z, r, off: rnd() * TAU }));
+      const sacM = A.dyn(sacs.length * SAC.length);
+      const DOME = []; for (let i = -4; i <= 4; i++) for (let j = 0; j <= 3; j++) for (let k = -4; k <= 4; k++) { const d = Math.sqrt(i * i + k * k + (j * 1.3) ** 2); if (d < 4.4 && d > 3.2) DOME.push([i * 0.5, j * 0.5, k * 0.5]); }
+      const jellies = [[30, -9, -46], [-31, -12, -52], [44, 12, -92], [-48, 8, -96]].map(([x, y, z]) => ({ x, y, z, off: rnd() * TAU }));
+      const jellyM = A.dyn(jellies.length * (DOME.length + 8 * 14));
       A.buildFigure({ armor: ['#4a4a3a', '#3e3e30', '#56523e'], headCol: () => pal(['#1a1a18', '#24241e']), cape: ['#3a3424', '#2e2a1c'], coil: '#d0c890',
         props: (seg, push) => { push(-0.06, 1.22, 0.75, [0.4, 1.4, 1.2]); push(0.12, 1.22, 0.75, [0.4, 1.4, 1.2]); push(0.03, 1.1, 0.78, '#3a3a34', 0.14); seg([0, 0.85, -0.05], [0, 1.1, -0.1], 0.18, '#5a4a30'); seg([-0.5, 0.62, 0.92], [-0.5, 0.35, 0.95], 0.02, '#3a3a34'); push(-0.5, 0.3, 0.95, [2.2, 1.6, 0.6], 0.14); for (let k = 0; k < 6; k++) push(0.55 + k * 0.03, 0.55 - k * 0.08, 0.7 + k * 0.07, [0.8, 1.4, 0.3], 0.08); } });
       A.stat(list, true);
@@ -578,6 +662,9 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
           const open = Math.max(c.lc, 0.15 * Math.max(0, Math.sin(p * 2 + s.off))) * A.lidAt(t, s.off);
           bulbEyes.draw(k, ex, ey + 0.3, s.z + 0.3, open, 0, 0, iris, { pw: 0.12, lid: [0.55, 0.5, 0.25], skin: [0.75, 0.68, 0.4] }, s.small ? 0.5 : 1); });
         stalkM.flush(); bulbEyes.flush();
+        let wi2 = 0; worms.forEach(w => { const yb = w.y + RM * Math.sin(p + w.off) * 1.5; for (let k = 0; k < 30; k++) { const x = w.x + w.d * (k * 0.42 + RM * Math.sin(p + w.off) * 1.2), y = yb + RM * Math.sin(p * 3 + k * 0.45 + w.off) * 0.7 * Math.sin(k / 29 * Math.PI + 0.3); wormM.put(wi2++, x, y, w.z, 0.62 - Math.abs(k - 12) * 0.012, k === 0 ? [0.5, 0.1, 0.12] : k % 3 === 0 ? [0.55, 0.38, 0.36] : [0.86, 0.7, 0.62]); } }); wormM.flush();
+        let si2 = 0; sacs.forEach(s => { const yb = s.y + RM * Math.sin(p + s.off) * 1.2, cs = Math.cos(s.r), sn = Math.sin(s.r), sw = 1 + 0.08 * Math.sin(p * 4 + s.off); SAC.forEach(q => { const band = Math.sin(q[3] * 1.4 - p * 6 + s.off) > 0.2; sacM.put(si2++, s.x + (q[0] * cs - q[1] * sn) * sw, yb + (q[0] * sn + q[1] * cs) * sw, s.z + q[2], 0.52, band ? [0.35, 1.2, 0.3] : [0.85, 0.9, 0.7]); }); }); sacM.flush();
+        let ji = 0; jellies.forEach(j => { const yb = j.y + RM * Math.sin(p + j.off) * 1.4, pulse = 1 + 0.1 * Math.sin(p * 3 + j.off); DOME.forEach(q => jellyM.put(ji++, j.x + q[0] * pulse, yb + q[1], j.z + q[2] * pulse, 0.5, [0.75, 0.8, 0.45 + 0.3 * Math.max(0, Math.sin(p * 3 + j.off))])); for (let h = 0; h < 8; h++) { const a = h / 8 * TAU; for (let k = 0; k < 14; k++) jellyM.put(ji++, j.x + Math.cos(a) * 1.5 + RM * Math.sin(p * 2 + k * 0.4 + h) * 0.25 * k / 14, yb - 0.3 - k * 0.45, j.z + Math.sin(a) * 1.5, 0.22, [0.7, 0.8, 0.35]); } }); jellyM.flush();
         threads.forEach(th => A.drawReach(th, t, c.yank)); A.drawVeins(veins, t, c.yank, [0.2, 0.3, 0.1], [1.0, 1.8, 0.4]); A.drawParticles(spores, t);
       };
     },
