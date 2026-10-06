@@ -32,22 +32,22 @@ body.voxel .screen canvas { image-rendering: pixelated; image-rendering: crisp-e
 .scan { position: absolute; inset: 0; pointer-events: none; display: none; background: repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
 body.voxel .scan { display: block; }
 
-.ui { position: absolute; inset: 0; display: grid; grid-template-rows: 1fr auto auto auto; justify-items: center; align-content: end; gap: 1.2vw; padding: 4% 4% 2.5%; pointer-events: none; text-align: center; background: linear-gradient(to top, rgba(3,4,8,.82) 0%, rgba(3,4,8,.45) 30%, transparent 55%); }
+.ui { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto auto; justify-items: center; padding: 3% 4% 2.5%; pointer-events: none; text-align: center; background: linear-gradient(to bottom, rgba(3,4,8,.7) 0%, transparent 22%, transparent 74%, rgba(3,4,8,.7) 100%); }
 .ui[hidden] { display: none; }
-.titleblock { grid-row: 2; display: grid; justify-items: center; gap: .5em; }
-.title { font: 700 clamp(20px, 4.6vw, 70px) var(--serif); letter-spacing: .14em; line-height: 1; color: var(--bone); text-shadow: 0 0 .6em rgba(255,122,61,.25), 0 2px 0 rgba(0,0,0,.6); margin-right: -.14em; }
+.titleblock { grid-row: 1; display: grid; justify-items: center; gap: .4em; }
+.title { font: 700 clamp(18px, 4.2vw, 64px) var(--serif); letter-spacing: .14em; line-height: 1; color: var(--bone); text-shadow: 0 0 .6em rgba(255,122,61,.25), 0 2px 0 rgba(0,0,0,.6); margin-right: -.14em; }
 .rule { width: clamp(120px, 34vw, 520px); height: 1px; background: linear-gradient(90deg, transparent, rgba(233,226,207,.7), transparent); }
 .sub { font: italic 500 clamp(11px, 1.6vw, 24px) var(--serif2); letter-spacing: .12em; color: var(--dim); }
-body.voxel .title { font: 700 clamp(16px, 3.9vw, 60px) var(--pix); letter-spacing: .06em; text-shadow: .08em .08em 0 #7a2a10, 0 0 0 transparent; color: #f3e6c4; margin-right: -.06em; }
+body.voxel .title { font: 700 clamp(16px, 3.6vw, 54px) var(--pix); letter-spacing: .06em; text-shadow: .08em .08em 0 #7a2a10, 0 0 0 transparent; color: #f3e6c4; margin-right: -.06em; }
 body.voxel .sub { font: 400 clamp(14px, 2vw, 30px) var(--term); font-style: normal; letter-spacing: .1em; color: #b9a98a; }
 body.voxel .rule { background: repeating-linear-gradient(90deg, #b9a98a 0 6px, transparent 6px 10px); height: 3px; }
 
-.press { font: 500 clamp(11px, 1.5vw, 22px) var(--serif2); letter-spacing: .35em; text-transform: uppercase; color: var(--bone); animation: breathe 3s ease-in-out infinite; grid-row: 3; margin-top: 1vw; }
+.press { font: 500 clamp(11px, 1.5vw, 22px) var(--serif2); letter-spacing: .35em; text-transform: uppercase; color: var(--bone); animation: breathe 3s ease-in-out infinite; grid-row: 3; }
 body.voxel .press { font: 400 clamp(14px, 2vw, 30px) var(--term); letter-spacing: .25em; animation: blink 1.2s steps(1) infinite; }
 @keyframes breathe { 0%,100% { opacity: .25 } 50% { opacity: .95 } }
 @keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
 
-.menu { grid-row: 3; list-style: none; margin: 0; padding: 0; display: grid; gap: .1em; pointer-events: auto; }
+.menu { grid-row: 2 / 4; align-self: end; justify-self: end; text-align: right; list-style: none; margin: 0 2% 0 0; padding: 0; display: grid; gap: .15em; pointer-events: auto; }
 .menu[hidden] { display: none; }
 .menu li { font: 500 clamp(11px, 1.45vw, 22px) var(--serif2); letter-spacing: .2em; text-transform: uppercase; color: var(--dim); cursor: pointer; position: relative; padding: .1em 1.4em; transition: color .2s; }
 .menu li.on { color: var(--bone); }
@@ -56,9 +56,9 @@ body.voxel .press { font: 400 clamp(14px, 2vw, 30px) var(--term); letter-spacing
 body.voxel .menu li { font: 400 clamp(13px, 1.8vw, 28px) var(--term); letter-spacing: .15em; transition: none; }
 body.voxel .menu li.on::before { content: "▶"; } body.voxel .menu li.on::after { content: ""; }
 
-.foot { grid-row: 4; font: 500 clamp(8px, .9vw, 13px) var(--serif2); letter-spacing: .2em; color: rgba(233,226,207,.35); text-transform: uppercase; }
-body.voxel .foot { grid-row: 4; font: 400 clamp(10px, 1.1vw, 16px) var(--term); }
-.toast { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); font: italic 500 clamp(11px, 1.4vw, 20px) var(--serif2); color: var(--bone); background: rgba(5,6,10,.7); border-top: 1px solid rgba(233,226,207,.3); border-bottom: 1px solid rgba(233,226,207,.3); padding: .5em 2em; white-space: nowrap; pointer-events: none; }
+.foot { grid-row: 4; margin-top: .6em; font: 500 clamp(8px, .9vw, 13px) var(--serif2); letter-spacing: .2em; color: rgba(233,226,207,.35); text-transform: uppercase; }
+body.voxel .foot { grid-row: 4; margin-top: .6em; font: 400 clamp(10px, 1.1vw, 16px) var(--term); }
+.toast { position: absolute; left: 50%; top: 20%; transform: translateX(-50%); font: italic 500 clamp(11px, 1.4vw, 20px) var(--serif2); color: var(--bone); background: rgba(5,6,10,.7); border-top: 1px solid rgba(233,226,207,.3); border-bottom: 1px solid rgba(233,226,207,.3); padding: .5em 2em; white-space: nowrap; pointer-events: none; }
 .toast[hidden] { display: none; }
 body.voxel .toast { font: 400 clamp(14px, 1.8vw, 26px) var(--term); font-style: normal; border: 2px solid #b9a98a; }
 
@@ -141,8 +141,8 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
   const L = c => new THREE.Color(c).convertSRGBToLinear();
   const scene = new THREE.Scene();
   scene.background = L('#04040a');
-  const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 400);
-  const CAM_T = new THREE.Vector3(0, 4.6, -10);
+  const camera = new THREE.PerspectiveCamera(46, 16 / 9, 0.1, 600);
+  const CAM_T = new THREE.Vector3(0, 8, -20);
 
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const frac = x => x - Math.floor(x);
@@ -160,16 +160,21 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
     return [c.r, c.g, c.b];
   }
 
+  // darting glances: 8 fixation points per loop with fast jumps between them
+  const SAC = Array.from({ length: 8 }, () => [(rnd() - 0.5) * 0.14, (rnd() - 0.5) * 0.08]);
+  function saccade(t) { if (reduced) return [0, 0]; const f = frac(t / LOOP) * 8, i = Math.floor(f), k = Math.min(1, (f - i) / 0.05), a = SAC[(i + 7) % 8], b = SAC[i]; return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; }
+
   // ---------- eye pattern (shared by voxel eyes; mirrored in GLSL) ----------
   // u,v in eye space (-1..1). Returns rgb, or null for skin.
-  function eyePix(u, v, open, gx, gy, round, iris, seedv) {
+  function eyePix(u, v, open, gx, gy, round, iris, seedv, pw) {
+    pw = pw || 0.085;
     const half = round ? 0.95 * open * Math.sqrt(Math.max(0, 1 - u * u)) : 0.58 * open * (1 - u * u);
     if (Math.abs(u) >= 1 || Math.abs(v) >= half) {
       if (Math.abs(u) < 1.1 && Math.abs(v) < half + 0.12 && open > 0.04) return [0.42, 0.04, 0.05]; // raw red lid rim
       return null;
     }
     const du = u - gx, dv = v - gy, r = Math.hypot(du, dv), a = Math.atan2(dv, du);
-    if ((du / 0.085) ** 2 + (dv / 0.36) ** 2 < 1) return [0.01, 0, 0.01];                       // slit pupil
+    if ((du / pw) ** 2 + (dv / 0.36) ** 2 < 1) return [0.01, 0, 0.01];                       // slit pupil
     if (r < 0.42) { const k = r / 0.42, st = 0.72 + 0.28 * Math.sin(a * 14 + seedv); return [iris[0] * st * (1.25 - k * 0.5) * 1.8, iris[1] * st * (1.2 - k * 0.6) * 1.8 + 0.15, iris[2] * st * (1.1 - k * 0.4) * 1.8]; }
     if (r < 0.48) return [0.12, 0.02, 0.03];                                                    // limbal ring
     const vein = r > 0.55 && Math.abs(Math.sin(a * 7 + r * 11 + seedv)) < 0.1;
@@ -479,7 +484,7 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
     // the great eye: a finer shell so the eye reads clearly
     const ms = 0.36, ml = []; V.moonN = [];
     for (let x = -MR; x <= MR; x += ms) for (let y = -MR; y <= MR; y += ms) for (let z = -1; z <= MR; z += ms) {
-      const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - MR) < ms * 0.55) { ml.push([MOON.x + x, MOON.y + y, MOON.z + z, '#cccccc', ms * 1.02]); V.moonN.push([x / d, y / d, z / d, rnd(), Math.sin(x * 2.3 + y * 1.7) ]); }
+      const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - MR) < ms * 0.55) { ml.push([MOON.x + x, MOON.y + y, MOON.z + z, '#cccccc', ms * 1.02]); V.moonN.push([x / d, y / d, z / d, rnd(), Math.sin(x * 2.3 + y * 1.7), d]); }
     }
     V.moon = voxSet(ml, true);
     // lid spikes (lashes of bone) along the almond
@@ -530,6 +535,25 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
     for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) if (rnd() < 0.85 - r * 0.05) fl.push([(c - 2) * w, 0.95 - r * w * 0.6, 0.1 - r * w * 0.9, pal(['#4a1010', '#5a1414', '#3a0c0c']), w]); // torn cape
     for (let k = 0; k < 14; k++) { const a = k / 14 * TAU * 2; fl.push([J.lAnkle[0] + Math.cos(a) * 0.16, J.lAnkle[1] + Math.sin(a) * 0.16, J.lAnkle[2] + 0.12 - k * 0.025, '#6a3036', 0.1]); } // coil around ankle
     V.fig = voxSet(fl, false, figGroup);
+
+    // distant watchers: smaller eye-entities with dangling tentacles, far behind the main one
+    V.bg = [[-62, 30, -140, 4.5], [70, 22, -150, 5], [-40, -4, -118, 3.2], [48, -10, -124, 3.6], [-92, 6, -168, 4], [22, 42, -172, 3.8], [98, 46, -182, 4.2], [-20, 60, -200, 5]]
+      .map(([x, y, z, R]) => ({ x, y, z, R: R * 1.6, seed: rnd() * TAU, off: rnd() }));
+    const sh = []; V.bgCells = [];
+    V.bg.forEach((e, ei) => { const vs = 0.7; for (let x = -e.R; x <= e.R; x += vs) for (let y = -e.R; y <= e.R; y += vs) for (let z = -e.R * 0.2; z <= e.R; z += vs) { const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - e.R) < vs * 0.55) { sh.push([0, 0, 0, '#888888', vs * 1.03]); V.bgCells.push({ ei, n: [x / d, y / d, z / d], d, nz: rnd() }); } } });
+    V.bgShell = voxSet(sh, true);
+    V.bgTent = []; V.bg.forEach((e, ei) => { for (let j = 0; j < 7; j++) for (let k = 0; k < 26; k++) V.bgTent.push({ ei, j, k, a: -Math.PI / 2 + (j - 3) * 0.3 }); });
+    V.bgTentM = voxSet(V.bgTent.map(c => [0, 0, 0, c.k > 21 ? '#9a3a4a' : pal(['#3a1a2e', '#2a1424', '#4a2034']), 0.8 * (1.3 - c.k / 26)]), true);
+    // colossal tentacles rising out of the void
+    V.giant = []; [[-120, -1], [-70, 1], [62, -1], [118, 1], [-15, 1]].forEach(([bx, side], gi) => { for (let k = 0; k < 48; k++) V.giant.push({ gi, bx, side, k, seed: gi * 1.7 }); });
+    V.giantM = voxSet(V.giant.map(c => [0, 0, 0, c.k % 6 === 3 ? '#8a3a5a' : pal(['#24122a', '#1c0e22', '#2e1634']), 1]), true);
+    // twinkling stars
+    V.tw = []; const tws = []; for (let i = 0; i < 90; i++) { const a = rnd() * TAU, u = rnd() * 0.9 + 0.05, r = 260; const P = [Math.cos(a) * r * 0.9, -40 + u * 200, -200 - rnd() * 60]; V.tw.push({ k: 1 + Math.floor(rnd() * 4), ph: rnd() * TAU }); tws.push([P[0], P[1], P[2], '#ffffff', 1 + rnd() * 1.2]); }
+    V.twM = voxSet(tws, true);
+    // embers from the dying fire, and rubble drifting in the mid-ground
+    V.emb = voxSet(Array.from({ length: 34 }, () => [0, 0, 0, '#ffa24a', 0.09]), true);
+    V.rub = []; for (let i = 0; i < 18; i++) V.rub.push({ x: (rnd() - 0.5) * 60, y: -6 + rnd() * 26, z: -12 - rnd() * 18, k: 0.5 + rnd() * 1.4, ph: rnd() * TAU });
+    V.rubM = voxSet(V.rub.map(() => [0, 0, 0, pal(['#3a3a42', '#2f2f36', '#45404a']), 1]));
   })();
   V.fig.visible = false;
 
@@ -538,7 +562,7 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
   const plane = (x, y, z, s) => [MOON.x + x, MOON.y + y, MOON.z + z];
   function eyeWorldPositions(t) { // every small eye's world position
     const out = [];
-    FEATHERS.forEach(f => { const [, , tx, ty] = featherAt(f, t); out.push(new THREE.Vector3(MOON.x + tx, MOON.y + ty, MOON.z + 2 + f.w * 0.4)); });
+    FEATHERS.forEach(f => { const [rx, ry, tx, ty] = featherAt(f, t); const fa = Math.atan2(ty - ry, tx - rx), bend = (reduced ? 0 : 1) * f.side * 0.9 * Math.sin(t / LOOP * TAU * 2 + f.j * 0.7 + f.w * 1.3); out.push(new THREE.Vector3(MOON.x + tx - Math.sin(fa) * bend, MOON.y + ty + Math.cos(fa) * bend, MOON.z + 2 + f.w * 0.4)); });
     RINGS.forEach((r, ri) => { for (let k = 0; k < r.N; k++) out.push(ringPoint(ri, k / r.N * TAU, t)); });
     [0.32, 0.5, 0.66, 0.8].forEach(u => out.push(reachCurve.getPoint(u).add(new THREE.Vector3(0, 0.45, 0.3))));
     return out;
@@ -547,7 +571,7 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
     const p = t / LOOP * TAU, yank = yankAt(t), lc = lookCam(t);
     poseTendrils(t); poseFigure(t);
     reachCtrl[5].copy(ankleWorld()); reachCtrl[4].set(reachCtrl[5].x - 0.2, 0.25, reachCtrl[5].z - 1.6);
-    camera.position.set(Math.sin(p) * 0.5 + yank * 0.06 * Math.sin(p * 97), 4.4 + Math.sin(2 * p) * 0.1, 16.5 + Math.cos(p) * 0.25);
+    camera.position.set(Math.sin(p) * 0.9 + yank * 0.1 * Math.sin(p * 97), 6 + Math.sin(2 * p) * 0.15 + yank * 0.06 * Math.sin(p * 83), 30 + Math.cos(p) * 0.5);
     camera.lookAt(CAM_T);
     rays.material.rotation = p / 7 * 1; rays2.material.rotation = -p / 7 * 1; // 1/7 turn per loop matches the 28-ray symmetry
     const gk = style === 'voxel' ? 0.45 : 1;
@@ -557,7 +581,9 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
     const iris = irisRGB(t);
     // great eye gaze: tracks the wanderer, snaps to the viewer, twitches during yanks
     const gFig = [-0.2, -0.16], gCam = [0, 0];
-    const gx = gFig[0] * (1 - lc) + gCam[0] * lc + 0.05 * Math.sin(p * 9) * yank, gy = gFig[1] * (1 - lc) + gCam[1] * lc;
+    const sc = saccade(t);
+    const gx = gFig[0] * (1 - lc) + gCam[0] * lc + 0.05 * Math.sin(p * 9) * yank + sc[0], gy = gFig[1] * (1 - lc) + gCam[1] * lc + sc[1];
+    const pupilW = 0.085 + 0.13 * yank + 0.015 * Math.sin(p * 4);
     const open = lidAt(t);
     post.uniforms.pulse.value = yank;
     const eyesW = eyeWorldPositions(t);
@@ -583,13 +609,15 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
       ap.needsUpdate = true;
     } else {
       // great eye
+      const breath = 1 + (reduced ? 0 : 0.018 * Math.sin(p * 2) + 0.025 * yank);
       V.moonN.forEach((n, i) => {
-        let c = null; if (n[2] > 0.1) c = eyePix(n[0] / 0.62, n[1] / 0.62, open, gx, gy, false, iris, 0);
+        D.position.set(MOON.x + n[0] * n[5] * breath, MOON.y + n[1] * n[5] * breath, MOON.z + n[2] * n[5] * breath); D.rotation.set(0, 0, 0); D.scale.setScalar(0.37 * breath); D.updateMatrix(); V.moon.setMatrixAt(i, D.matrix);
+        let c = null; if (n[2] > 0.1) c = eyePix(n[0] / 0.62, n[1] / 0.62, open, gx, gy, false, iris, 0, pupilW);
         const lit = 0.38 + 0.62 * Math.max(0, n[1] * 0.3 + n[2] * 0.9);
         if (!c) { const nz = n[3]; c = Math.abs(n[4]) < 0.08 && n[2] > -0.2 ? [0.5, 0.08, 0.1] : [0.72 - nz * 0.2, 0.64 - nz * 0.2, 0.6 - nz * 0.18]; c = [c[0] * lit, c[1] * lit, c[2] * lit]; }
         C.setRGB(c[0], c[1], c[2]).convertSRGBToLinear(); V.moon.setColorAt(i, C);
       });
-      V.moon.instanceColor.needsUpdate = true;
+      V.moon.instanceColor.needsUpdate = true; V.moon.instanceMatrix.needsUpdate = true;
       // small eyes
       eyesW.forEach((e, ei) => {
         const def = V.eyeDefs[ei]; if (!def) return;
@@ -598,11 +626,11 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
         def.cells.forEach((c, k) => { const idx = def.start + k; D.position.set(e.x + c[0], e.y + c[1], e.z + 0.3); D.rotation.set(0, 0, 0); D.scale.setScalar(0.21); D.updateMatrix(); V.eyes.setMatrixAt(idx, D.matrix); const col = eyePix(c[2], c[3], o, lgx, lgy, true, iris, def.seed) || [0.3, 0.08, 0.1]; C.setRGB(col[0], col[1], col[2]).convertSRGBToLinear(); V.eyes.setColorAt(idx, C); });
       });
       V.eyes.instanceMatrix.needsUpdate = true; V.eyes.instanceColor.needsUpdate = true;
-      V.fSlots.forEach((s, i) => { const [rx, ry, tx, ty] = featherAt(s.f, t); D.position.set(MOON.x + rx + (tx - rx) * s.k, MOON.y + ry + (ty - ry) * s.k, MOON.z + 1.6 + s.f.w * 0.4); D.scale.setScalar(s.size); D.updateMatrix(); V.feath.setMatrixAt(i, D.matrix); });
+      V.fSlots.forEach((s, i) => { const [rx, ry, tx, ty] = featherAt(s.f, t); const fa = Math.atan2(ty - ry, tx - rx), bend = (reduced ? 0 : 1) * s.f.side * 0.9 * s.k * s.k * Math.sin(p * 2 + s.f.j * 0.7 + s.f.w * 1.3); D.position.set(MOON.x + rx + (tx - rx) * s.k - Math.sin(fa) * bend, MOON.y + ry + (ty - ry) * s.k + Math.cos(fa) * bend, MOON.z + 1.6 + s.f.w * 0.4); D.scale.setScalar(s.size); D.updateMatrix(); V.feath.setMatrixAt(i, D.matrix); });
       V.feath.instanceMatrix.needsUpdate = true;
       V.rSlots.forEach((s, i) => { D.position.copy(ringPoint(s.ri, s.a, t)); D.scale.setScalar(0.42); D.updateMatrix(); V.rings.setMatrixAt(i, D.matrix); });
       V.rings.instanceMatrix.needsUpdate = true;
-      V.tSlots.forEach((s, i) => { const g = s.sg; D.position.set(MOON.x + g.sx + (g.ex - g.sx) * s.f, MOON.y + g.sy + (g.ey - g.sy) * s.f, MOON.z + 3 + g.depth * 0.3); D.scale.setScalar(s.size); D.updateMatrix(); V.tend.setMatrixAt(i, D.matrix); });
+      V.tSlots.forEach((s, i) => { const g = s.sg, wv = (reduced ? 0 : 1) * Math.sin(s.f * Math.PI) * 0.35 * Math.sin(p * 3 + g.off + s.f * 4); D.position.set(MOON.x + g.sx + (g.ex - g.sx) * s.f - Math.sin(g.a) * wv, MOON.y + g.sy + (g.ey - g.sy) * s.f + Math.cos(g.a) * wv, MOON.z + 3 + g.depth * 0.3); D.scale.setScalar(s.size); D.updateMatrix(); V.tend.setMatrixAt(i, D.matrix); });
       V.tend.instanceMatrix.needsUpdate = true;
       LEAVES.forEach((s, i) => { D.position.set(MOON.x + s.ex, MOON.y + s.ey, MOON.z + 3.3); D.scale.setScalar(0.32 + 0.12 * Math.sin(p * 3 + i)); D.updateMatrix(); V.tips.setMatrixAt(i, D.matrix); });
       V.tips.instanceMatrix.needsUpdate = true;
@@ -612,6 +640,41 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
       V.fire.instanceMatrix.needsUpdate = true; V.fire.instanceColor.needsUpdate = true;
       for (let i = 0; i < 200; i++) { const f = frac(t / LOOP * (1 + (i % 2)) + i * 0.0731); D.position.set(((i * 37) % 44) - 22 + Math.round(Math.sin(f * TAU * 2 + i) * 3) * 0.2, 14 - f * 16, -((i * 7) % 28) + 6); D.scale.setScalar(0.08); D.updateMatrix(); V.ash.setMatrixAt(i, D.matrix); }
       V.ash.instanceMatrix.needsUpdate = true;
+      // distant watchers
+      const bob = V.bg.map(e => [Math.sin(p + e.seed) * 0.9, Math.cos(p + e.seed) * 0.4]);
+      V.bgCells.forEach((c, i) => {
+        const e = V.bg[c.ei], b = bob[c.ei], n = c.n;
+        D.position.set(e.x + b[1] + n[0] * c.d, e.y + b[0] + n[1] * c.d, e.z + n[2] * c.d); D.rotation.set(0, 0, 0); D.scale.setScalar(0.73); D.updateMatrix(); V.bgShell.setMatrixAt(i, D.matrix);
+        const tx = (MOON.x - e.x) * (1 - lc) + (camera.position.x - e.x) * lc, ty = (MOON.y - e.y) * (1 - lc) + (camera.position.y - e.y) * lc, tl = Math.hypot(tx, ty) || 1;
+        let col = n[2] > 0.1 ? eyePix(n[0] / 0.7, n[1] / 0.7, lidAt(t, e.off), tx / tl * 0.3, ty / tl * 0.3, false, irisRGB(t, e.seed), e.seed) : null;
+        const lit = 0.35 + 0.65 * Math.max(0, n[1] * 0.3 + n[2] * 0.9);
+        if (!col) col = [(0.52 - c.nz * 0.12) * lit, (0.3 - c.nz * 0.08) * lit, (0.46 - c.nz * 0.1) * lit]; else col = [col[0] * 0.95, col[1] * 0.85, col[2] * 0.95];
+        C.setRGB(col[0], col[1], col[2]).convertSRGBToLinear(); V.bgShell.setColorAt(i, C);
+      });
+      V.bgShell.instanceMatrix.needsUpdate = true; V.bgShell.instanceColor.needsUpdate = true;
+      let prev = null;
+      V.bgTent.forEach((c, i) => {
+        const e = V.bg[c.ei], b = bob[c.ei];
+        if (c.k === 0) { prev = { x: e.x + b[1] + Math.cos(c.a) * e.R * 0.85, y: e.y + b[0] + Math.sin(c.a) * e.R * 0.85, a: c.a }; }
+        else { const ang = c.a + (reduced ? 0 : 1) * 0.55 * (c.k / 21) * Math.sin(p * 2 + c.k * 0.35 + e.seed + c.j * 0.9); prev = { x: prev.x + Math.cos(ang) * 0.7, y: prev.y + Math.sin(ang) * 0.7, a: ang }; }
+        D.position.set(prev.x, prev.y, e.z + 0.5); D.rotation.set(0, 0, 0); D.scale.setScalar(0.8 * (1.3 - c.k / 26)); D.updateMatrix(); V.bgTentM.setMatrixAt(i, D.matrix);
+      });
+      V.bgTentM.instanceMatrix.needsUpdate = true;
+      let gp = null;
+      V.giant.forEach((c, i) => {
+        if (c.k === 0) gp = { x: c.bx, y: -78 };
+        const ang = Math.PI / 2 + c.side * 0.0007 * c.k * c.k + (reduced ? 0 : 1) * 0.22 * (c.k / 47) * Math.sin(p + c.k * 0.13 + c.seed);
+        gp = { x: gp.x + Math.cos(ang) * 2.1, y: gp.y + Math.sin(ang) * 2.1 };
+        const sz = 4.6 * (1 - c.k / 52) + 0.5;
+        D.position.set(gp.x, gp.y, -205); D.rotation.set(0, 0, ang); D.scale.setScalar(sz); D.updateMatrix(); V.giantM.setMatrixAt(i, D.matrix);
+      });
+      V.giantM.instanceMatrix.needsUpdate = true;
+      V.tw.forEach((s, i) => { const k = 0.35 + 0.65 * Math.max(0, Math.sin(p * s.k + s.ph)); C.setRGB(k, k * 0.95, k * 1.1); V.twM.setColorAt(i, C); });
+      V.twM.instanceColor.needsUpdate = true;
+      for (let i = 0; i < 34; i++) { const k = 1 + (i % 3), f = frac(t / LOOP * k + i * 0.137); D.position.set(2.6 + Math.sin(i * 7.1 + f * 6) * 0.5 * f, 0.3 + f * 4, 2.4 + Math.cos(i * 3.3 + f * 5) * 0.4 * f); D.rotation.set(0, 0, 0); D.scale.setScalar(0.1 * (1 - f)); D.updateMatrix(); V.emb.setMatrixAt(i, D.matrix); }
+      V.emb.instanceMatrix.needsUpdate = true;
+      V.rub.forEach((r, i) => { D.position.set(r.x + Math.cos(p + r.ph) * 0.8, r.y + Math.sin(p * 2 + r.ph) * 0.5, r.z); D.rotation.set(p + r.ph, p * 2 + r.ph, 0); D.scale.setScalar(r.k); D.updateMatrix(); V.rubM.setMatrixAt(i, D.matrix); });
+      V.rubM.instanceMatrix.needsUpdate = true;
     }
     // ground veins pulse outward from the tendril, shared by both styles
     VEINPTS.forEach((v, i) => { const w = Math.pow(Math.max(0, Math.sin(TAU * (v[2] / 22 - t / LOOP * 3))), 3); D.position.set(v[0], 0.05, v[1]); D.rotation.set(0, 0, 0); D.scale.set(0.2, 0.05, 0.2); D.updateMatrix(); V.veins.setMatrixAt(i, D.matrix); C.setRGB(0.5 + w * 2.5 + yank, 0.03 + w * 0.3, 0.02); V.veins.setColorAt(i, C); });
@@ -634,7 +697,7 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
   const bufSize = new THREE.Vector2();
   function resize() {
     const r = cv.getBoundingClientRect(); if (!r.width) return;
-    if (style === 'voxel') { renderer.setPixelRatio(1); renderer.setSize(Math.round(r.width / 2.6), Math.round(r.height / 2.6), false); }
+    if (style === 'voxel') { renderer.setPixelRatio(1); renderer.setSize(Math.round(r.width / 2.1), Math.round(r.height / 2.1), false); }
     else { renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); renderer.setSize(r.width, r.height, false); }
     renderer.getDrawingBufferSize(bufSize); rt.setSize(bufSize.x, bufSize.y); post.uniforms.res.value.copy(bufSize);
     camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
