@@ -1,0 +1,667 @@
+<title>Strange Branches: Ascension</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<style>
+/* Layout: one 16:9 "screen" (the game's title screen) with a slim control bar under it. Single dark look by design. */
+:root {
+  --void: #05060a;      /* page + space */
+  --panel: #0d1016;     /* control bar */
+  --line: #232833;
+  --bone: #e9e2cf;      /* title text */
+  --dim: #8a8f9c;
+  --ember: #ff7a3d;     /* fire, eye */
+  --gold: #e6b84a;
+  --rig: #6fe3ff;       /* suit lights */
+  --serif: "Cinzel", "Trajan Pro", Georgia, serif;
+  --serif2: "Cormorant Garamond", Georgia, serif;
+  --pix: "Silkscreen", "Courier New", monospace;
+  --term: "VT323", "Courier New", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--void); color: var(--bone); font: 14px system-ui, sans-serif; }
+.wrap { max-width: 1400px; margin: 0 auto; padding-block: 16px 24px; padding-inline: 16px; display: grid; gap: 12px; }
+
+.screen { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #000; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; user-select: none; }
+.screen canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+body.voxel .screen canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* overlays */
+.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,.75) 100%); }
+.scan { position: absolute; inset: 0; pointer-events: none; display: none; background: repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+body.voxel .scan { display: block; }
+
+.ui { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto auto; justify-items: center; padding: 3% 4% 2.5%; pointer-events: none; text-align: center; background: linear-gradient(to bottom, rgba(3,4,8,.7) 0%, transparent 22%, transparent 74%, rgba(3,4,8,.7) 100%); }
+.ui[hidden] { display: none; }
+.titleblock { grid-row: 1; display: grid; justify-items: center; gap: .4em; }
+.title { font: 700 clamp(18px, 4.2vw, 64px) var(--serif); letter-spacing: .14em; line-height: 1; color: var(--bone); text-shadow: 0 0 .6em rgba(255,122,61,.25), 0 2px 0 rgba(0,0,0,.6); margin-right: -.14em; }
+.rule { width: clamp(120px, 34vw, 520px); height: 1px; background: linear-gradient(90deg, transparent, rgba(233,226,207,.7), transparent); }
+.sub { font: italic 500 clamp(11px, 1.6vw, 24px) var(--serif2); letter-spacing: .12em; color: var(--dim); }
+body.voxel .title { font: 700 clamp(16px, 3.6vw, 54px) var(--pix); letter-spacing: .06em; text-shadow: .08em .08em 0 #7a2a10, 0 0 0 transparent; color: #f3e6c4; margin-right: -.06em; }
+body.voxel .sub { font: 400 clamp(14px, 2vw, 30px) var(--term); font-style: normal; letter-spacing: .1em; color: #b9a98a; }
+body.voxel .rule { background: repeating-linear-gradient(90deg, #b9a98a 0 6px, transparent 6px 10px); height: 3px; }
+
+.press { font: 500 clamp(11px, 1.5vw, 22px) var(--serif2); letter-spacing: .35em; text-transform: uppercase; color: var(--bone); animation: breathe 3s ease-in-out infinite; grid-row: 3; }
+body.voxel .press { font: 400 clamp(14px, 2vw, 30px) var(--term); letter-spacing: .25em; animation: blink 1.2s steps(1) infinite; }
+@keyframes breathe { 0%,100% { opacity: .25 } 50% { opacity: .95 } }
+@keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+
+.menu { grid-row: 2 / 4; align-self: end; justify-self: end; text-align: right; list-style: none; margin: 0 2% 0 0; padding: 0; display: grid; gap: .15em; pointer-events: auto; }
+.menu[hidden] { display: none; }
+.menu li { font: 500 clamp(11px, 1.45vw, 22px) var(--serif2); letter-spacing: .2em; text-transform: uppercase; color: var(--dim); cursor: pointer; position: relative; padding: .1em 1.4em; transition: color .2s; }
+.menu li.on { color: var(--bone); }
+.menu li.on::before, .menu li.on::after { content: "◆"; position: absolute; top: 50%; transform: translateY(-50%); font-size: .55em; color: var(--ember); }
+.menu li.on::before { left: 0; } .menu li.on::after { right: 0; }
+body.voxel .menu li { font: 400 clamp(13px, 1.8vw, 28px) var(--term); letter-spacing: .15em; transition: none; }
+body.voxel .menu li.on::before { content: "▶"; } body.voxel .menu li.on::after { content: ""; }
+
+.foot { grid-row: 4; margin-top: .6em; font: 500 clamp(8px, .9vw, 13px) var(--serif2); letter-spacing: .2em; color: rgba(233,226,207,.35); text-transform: uppercase; }
+body.voxel .foot { grid-row: 4; margin-top: .6em; font: 400 clamp(10px, 1.1vw, 16px) var(--term); }
+.toast { position: absolute; left: 50%; top: 20%; transform: translateX(-50%); font: italic 500 clamp(11px, 1.4vw, 20px) var(--serif2); color: var(--bone); background: rgba(5,6,10,.7); border-top: 1px solid rgba(233,226,207,.3); border-bottom: 1px solid rgba(233,226,207,.3); padding: .5em 2em; white-space: nowrap; pointer-events: none; }
+.toast[hidden] { display: none; }
+body.voxel .toast { font: 400 clamp(14px, 1.8vw, 26px) var(--term); font-style: normal; border: 2px solid #b9a98a; }
+
+/* control bar */
+.bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; }
+.grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.lab { font: 600 11px system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-right: 4px; }
+.bar button { font: 500 13px system-ui, sans-serif; color: var(--bone); background: transparent; border: 1px solid var(--line); border-radius: 3px; padding: 6px 10px; cursor: pointer; }
+.bar button:hover { border-color: var(--dim); }
+.bar button[aria-pressed="true"] { background: var(--bone); color: var(--void); border-color: var(--bone); }
+.bar button:focus-visible, .menu li:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.clock { margin-left: auto; font: 12px ui-monospace, Menlo, monospace; color: var(--dim); font-variant-numeric: tabular-nums; }
+.note { color: var(--dim); font-size: 12.5px; line-height: 1.5; margin: 0; max-width: 75ch; }
+
+body.rec .wrap { max-width: none; padding: 0; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; }
+body.rec .bar, body.rec .note { display: none; }
+body.rec .screen { width: min(100vw, 177.78vh); border: 0; border-radius: 0; }
+.exit { position: fixed; right: 12px; bottom: 12px; display: none; font: 12px ui-monospace, monospace; color: var(--dim); background: rgba(0,0,0,.5); border: 1px solid var(--line); border-radius: 3px; padding: 6px 10px; cursor: pointer; opacity: 0; }
+body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-visible { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .press { animation: none; opacity: .8; } }
+</style>
+
+<div class="wrap">
+  <div class="screen" id="screen" tabindex="0" aria-label="Animated game title screen. Press any key or click to open the menu.">
+    <canvas id="cv"></canvas>
+    <div class="vignette"></div>
+    <div class="scan"></div>
+    <div class="ui" id="ui">
+      <div class="titleblock">
+        <div class="title">STRANGE BRANCHES</div>
+        <div class="rule"></div>
+        <div class="sub" id="sub">Every branch is real somewhere</div>
+      </div>
+      <div class="press" id="press">Press any button</div>
+      <ul class="menu" id="menu" hidden></ul>
+      <div class="foot">© Strange Branches · ver. 0.66.M</div>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+  </div>
+
+  <div class="bar" role="toolbar" aria-label="Title screen controls">
+    
+    <div class="grp"><span class="lab">Screen</span>
+      <button id="stPress" aria-pressed="true">Press any button</button>
+      <button id="stMenu" aria-pressed="false">Menu</button>
+      <button id="stNone" aria-pressed="false">No text</button></div>
+    <div class="grp">
+      <button id="playBtn">Pause</button>
+      <button id="recBtn" title="Fullscreen 16:9 for screen recording (R)">Recording view</button></div>
+    <div class="clock" id="clock">loop 0.0 / 12.0 s</div>
+  </div>
+  <p class="note">The animation repeats seamlessly every 12 seconds, so a screen recording of any 12-second stretch loops perfectly. Click the screen or press any key to open the menu; use arrow keys and Enter to pick an item. Keys: R recording view, Space pause.</p>
+</div>
+<button class="exit" id="exitRec">Exit recording view (Esc)</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const THEME = 'anime';
+  document.body.classList.add('voxel');
+  const $ = id => document.getElementById(id);
+  const LOOP = 12, TAU = Math.PI * 2;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const RM = reduced ? 0 : 1;
+  const cv = $('cv');
+  const fail = msg => $('screen').insertAdjacentHTML('beforeend', `<p style="position:absolute;inset:auto 0 45%;text-align:center;color:#8a8f9c">${msg}</p>`);
+  if (!window.THREE) return fail('The 3D engine did not load. Reload the page.');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false, preserveDrawingBuffer: true }); }
+  catch (e) { return fail('This browser could not start WebGL.'); }
+  renderer.toneMapping = THREE.NoToneMapping;
+  renderer.outputEncoding = THREE.LinearEncoding;
+
+  // ---------- small helpers ----------
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const frac = x => x - Math.floor(x);
+  const H = h => { const c = new THREE.Color(h); return [c.r, c.g, c.b]; };
+  const pal = a => a[Math.floor(rnd() * a.length)];
+  const mix = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+  const scl = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+  const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+  const D = new THREE.Object3D(), C = new THREE.Color();
+  const BOX = new THREE.BoxGeometry(1, 1, 1);
+  const BASIC = new THREE.MeshBasicMaterial({ color: 0xffffff }), LAMB = new THREE.MeshLambertMaterial({ color: 0xffffff });
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(46, 16 / 9, 0.1, 700);
+
+  // static voxels: list of [x, y, z, colour (hex or rgb), size or [sx,sy,sz]]
+  function stat(list, lit, parent) {
+    const m = new THREE.InstancedMesh(BOX, lit ? LAMB : BASIC, Math.max(1, list.length));
+    m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1, list.length) * 3), 3);
+    list.forEach((v, i) => {
+      D.position.set(v[0], v[1], v[2]); D.rotation.set(0, 0, 0);
+      if (Array.isArray(v[4])) D.scale.set(...v[4]); else D.scale.setScalar(v[4] || 1);
+      D.updateMatrix(); m.setMatrixAt(i, D.matrix);
+      if (typeof v[3] === 'string') C.set(v[3]); else C.setRGB(...v[3]); C.convertSRGBToLinear(); m.setColorAt(i, C);
+    });
+    m.count = list.length; m.frustumCulled = false; (parent || scene).add(m); return m;
+  }
+  // dynamic voxels, repositioned/recoloured every frame
+  function dyn(n, lit, parent) {
+    const m = new THREE.InstancedMesh(BOX, lit ? LAMB : BASIC, Math.max(1, n));
+    m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1, n) * 3), 3);
+    m.frustumCulled = false; (parent || scene).add(m);
+    return {
+      m, n,
+      put(i, x, y, z, s, c, rz) { D.position.set(x, y, z); D.rotation.set(0, 0, rz || 0); if (Array.isArray(s)) D.scale.set(s[0], s[1], s[2]); else D.scale.setScalar(s); D.updateMatrix(); m.setMatrixAt(i, D.matrix); if (c) { C.setRGB(c[0], c[1], c[2]).convertSRGBToLinear(); m.setColorAt(i, C); } },
+      col(i, c) { C.setRGB(c[0], c[1], c[2]).convertSRGBToLinear(); m.setColorAt(i, C); },
+      flush() { m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true; },
+    };
+  }
+
+  // ---------- timing (everything periodic in LOOP => seamless loop) ----------
+  const YANKS = [0.31, 0.78];
+  function yankAt(t) { const f = frac(t / LOOP); let y = 0; for (const c of YANKS) { const d = f - c; if (d > -0.01 && d < 0.09) y = Math.max(y, d < 0 ? (d + 0.01) / 0.01 : Math.exp(-d * 45)); } return RM * y; }
+  function lidAt(t, off) { const f = frac(t / LOOP + (off || 0)); let o = 1; for (const c of [0.12, 0.55]) { const d = Math.abs(f - c); if (d < 0.022) o = Math.min(o, d / 0.022); } return reduced ? 1 : o; }
+  function lookCam(t) { const f = frac(t / LOOP), s = x => Math.max(0, Math.min(1, x)); return s((f - 0.58) / 0.04) * s((0.93 - f) / 0.04); }
+  function irisRGB(t, k, base, amp) { const p = t / LOOP * TAU + (k || 0); const c = new THREE.Color().setHSL(frac((base == null ? 0.04 : base) + (amp == null ? 0.06 : amp) * Math.sin(p) + 0.03 * Math.sin(2 * p + 1)), 1, 0.52); return [c.r, c.g, c.b]; }
+  const SAC = Array.from({ length: 8 }, () => [(rnd() - 0.5) * 0.14, (rnd() - 0.5) * 0.08]);
+  function saccade(t) { if (reduced) return [0, 0]; const f = frac(t / LOOP) * 8, i = Math.floor(f), k = Math.min(1, (f - i) / 0.05), a = SAC[(i + 7) % 8], b = SAC[i]; return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; }
+
+  // eye pattern in eye space u,v (-1..1). opts: round (circular lids), human (round pupil), pw (pupil size)
+  function eyePix(u, v, open, gx, gy, iris, o) {
+    o = o || {};
+    const half = o.round ? 0.95 * open * Math.sqrt(Math.max(0, 1 - u * u)) : 0.58 * open * (1 - u * u);
+    if (Math.abs(u) >= 1 || Math.abs(v) >= half) {
+      if (Math.abs(u) < 1.1 && Math.abs(v) < half + 0.12 && open > 0.04) return o.lid || [0.42, 0.04, 0.05];
+      return null;
+    }
+    const du = u - gx, dv = v - gy, r = Math.hypot(du, dv), a = Math.atan2(dv, du), pw = o.pw || 0.085;
+    if (o.human ? r < pw * 2 : (du / pw) ** 2 + (dv / 0.36) ** 2 < 1) return [0.01, 0, 0.01];
+    if (r < 0.42) { const k = r / 0.42, st = 0.72 + 0.28 * Math.sin(a * 14 + (o.seed || 0)); return [iris[0] * st * (1.25 - k * 0.5) * 1.8, iris[1] * st * (1.2 - k * 0.6) * 1.8 + 0.12, iris[2] * st * (1.1 - k * 0.4) * 1.8]; }
+    if (r < 0.48) return [0.12, 0.02, 0.03];
+    if (r > 0.55 && Math.abs(Math.sin(a * 7 + r * 11 + (o.seed || 0))) < 0.1) return [0.62, 0.08, 0.08];
+    return o.sclera || [0.92, 0.86, 0.70 - Math.abs(v) * 0.25];
+  }
+
+  // sphere shell of voxels; cells carry the unit normal so themes can paint eyes, skulls, wrinkles...
+  function shell(cx, cy, cz, R, vs, opt) {
+    opt = opt || {}; const cells = [], sy = opt.sy || 1, zmin = opt.zmin == null ? -R * 0.15 : opt.zmin;
+    for (let x = -R; x <= R; x += vs) for (let y = -R; y <= R; y += vs) for (let z = zmin; z <= R; z += vs) {
+      const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - R) < vs * 0.55) cells.push({ n: [x / d, y / d, z / d], d, nz: rnd(), w: Math.sin(x * 2.3 + y * 1.7) });
+    }
+    const dm = dyn(cells.length, false, opt.parent);
+    const o = { cells, dm, cx, cy, cz, sy, vs, placed: false,
+      update(shade, breath) {
+        const b = breath || 1, move = !o.placed || breath;
+        cells.forEach((c, i) => { const col = shade(c); if (!col) { dm.put(i, 0, -999, 0, 0.001); c.hid = true; return; } if (move || c.hid) { dm.put(i, o.cx + c.n[0] * c.d * b, o.cy + c.n[1] * c.d * b * sy, o.cz + c.n[2] * c.d * b, vs * 1.03 * b); c.hid = false; } dm.col(i, col); });
+        o.placed = true; dm.flush();
+      } };
+    return o;
+  }
+  // flat voxel eye disc facing the camera (for small eyes)
+  function eyeDisc(r, vs) { const cells = [], n = Math.max(2, Math.ceil(r / vs)); for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) { const u = i / n, v = j / n; if (u * u + v * v <= 1.05) cells.push([i * vs, j * vs, u, v]); } return cells; }
+  function eyes(count, r, vs) { // pool for many small eyes
+    const defs = []; let total = 0; for (let k = 0; k < count; k++) { const cells = eyeDisc(r, vs); defs.push({ start: total, cells, seed: rnd() * 6 }); total += cells.length; }
+    const dm = dyn(total);
+    return { defs, dm, draw(k, x, y, z, open, gx, gy, iris, opts, scale) { const d = defs[k], s = scale || 1; d.cells.forEach((c, i) => dm.put(d.start + i, x + c[0] * s, y + c[1] * s, z, vs * 1.05 * s, eyePix(c[2], c[3], open, gx, gy, iris, Object.assign({ round: true, seed: d.seed }, opts)) || (opts && opts.skin) || [0.3, 0.08, 0.1])); }, flush() { dm.flush(); } };
+  }
+
+  // ---------- post-processing (dither, colour split, warp, grain) ----------
+  const isGL2 = renderer.capabilities.isWebGL2;
+  const rt = new THREE.WebGLRenderTarget(4, 4, { type: isGL2 ? THREE.HalfFloatType : THREE.UnsignedByteType });
+  const post = new THREE.ShaderMaterial({
+    uniforms: { tDiffuse: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, phase: { value: 0 }, frameN: { value: 0 }, pulse: { value: 0 }, exposure: { value: 0.95 }, tint: { value: new THREE.Vector3(0.85, 0.75, 1.1) } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 res; uniform float phase, frameN, pulse, exposure; uniform vec3 tint; varying vec2 vUv;
+      vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0); }
+      float bayer2(vec2 a){ a = floor(a); return fract(dot(a, vec2(0.5, a.y*0.75))); }
+      float bayer4(vec2 a){ return bayer2(0.5*a)*0.25 + bayer2(a); }
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+      void main(){
+        vec2 uv = vUv; float wob = (0.0009 + pulse*0.006) * 2.0;
+        uv.x += sin(uv.y*26.0 + phase*3.0) * wob + sin(uv.y*91.0 - phase*5.0) * wob*0.4;
+        vec2 d = uv - 0.5; float ca = (0.0018 + pulse*0.012) * 1.8;
+        vec3 col = vec3(texture2D(tDiffuse, uv + d*ca*3.0).r, texture2D(tDiffuse, uv).g, texture2D(tDiffuse, uv - d*ca*3.0).b);
+        col = aces(col * exposure * (1.0 + pulse*0.35)); col = pow(col, vec3(1.0/2.2));
+        col += (hash(floor(uv*res) + frameN*1.37) - 0.5) * 0.065;
+        col *= mix(0.45, 1.0, smoothstep(1.15, 0.35, length(d*vec2(1.0, 0.8))*1.55));
+        col = mix(col, col*tint, (1.0 - dot(col, vec3(0.33)))*0.35);
+        col = floor(col*6.0 + bayer4(gl_FragCoord.xy)) / 6.0;
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+    depthTest: false, depthWrite: false,
+  });
+  const postScene = new THREE.Scene(), postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
+
+  // ---------- sprites (glows, rays, nebula) ----------
+  function glowTex(stops, rays) {
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    stops.forEach(([o, col]) => gr.addColorStop(o, col)); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+    if (rays) { g.globalCompositeOperation = 'destination-in'; g.translate(128, 128); for (let i = 0; i < rays; i++) { g.rotate(TAU / rays); g.beginPath(); g.moveTo(0, 0); g.lineTo(140, -6 - (i % 3) * 3); g.lineTo(140, 6 + (i % 3) * 3); g.closePath(); g.fill(); } }
+    return new THREE.CanvasTexture(c);
+  }
+  const softTex = glowTex([[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(255,255,255,.55)'], [1, 'rgba(255,255,255,0)']]);
+  const rayTex = glowTex([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,.35)'], [1, 'rgba(255,255,255,0)']], 28);
+  const discTex = glowTex([[0, 'rgba(255,255,255,1)'], [0.93, 'rgba(255,255,255,1)'], [0.97, 'rgba(255,255,255,.3)'], [1, 'rgba(255,255,255,0)']]);
+  function sprite(col, size, opacity, tex, normal) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex || softTex, color: new THREE.Color(col).convertSRGBToLinear(), transparent: true, opacity, blending: normal ? THREE.NormalBlending : THREE.AdditiveBlending, depthWrite: false })); s.scale.setScalar(size); scene.add(s); return s; }
+
+  // ---------- shared world: stars, island, wanderer, reaching tendrils, veins, particles ----------
+  const FIG = V3(-1.9, 0, 2.2);
+  const figGroup = new THREE.Group(); scene.add(figGroup);
+  // struggling pose (local: +z faces camera, the entity is behind at -z)
+  const J = {
+    pelvis: [0, 0.55, 0], chest: [0, 0.95, 0.28], neck: [0, 1.15, 0.42], head: [0.04, 1.2, 0.58],
+    lKnee: [-0.2, 0.12, -0.05], lAnkle: [-0.2, 0.14, -0.55], lToe: [-0.2, 0.05, -0.7],
+    rKnee: [0.22, 0.48, 0.32], rAnkle: [0.24, 0.06, 0.3],
+    lSh: [-0.3, 1.02, 0.3], lElb: [-0.48, 0.72, 0.62], lHand: [-0.5, 0.62, 0.92],
+    rSh: [0.3, 1.02, 0.3], rElb: [0.55, 0.6, 0.7], rHand: [0.72, 0.06, 1.12],
+  };
+  function poseFigure(t) {
+    const p = t / LOOP * TAU, y = yankAt(t);
+    figGroup.position.set(FIG.x + RM * 0.012 * Math.sin(p * 53), 0, FIG.z - 0.32 * y + RM * 0.008 * Math.sin(p * 41));
+    figGroup.rotation.set(-0.12 * y + RM * 0.01 * Math.sin(p * 37), 0.35, RM * 0.015 * Math.sin(p * 47));
+    figGroup.updateMatrixWorld(true);
+  }
+  const local = (a) => V3(...a).applyMatrix4(figGroup.matrixWorld);
+  function buildFigure(f) {
+    const fl = [], w = 0.1, A = () => pal(f.armor);
+    const seg = (a, b, r, col) => { const P0 = V3(...a), P1 = V3(...b), n = Math.ceil(P0.distanceTo(P1) / (w * 0.8)); for (let i = 0; i <= n; i++) { const P = P0.clone().lerp(P1, i / n); for (let x = -r; x <= r + 1e-6; x += w) for (let y = -r; y <= r + 1e-6; y += w) for (let z = -r; z <= r + 1e-6; z += w) if (x * x + y * y + z * z <= r * r + 1e-4) fl.push([Math.round((P.x + x) / w) * w, Math.round((P.y + y) / w) * w, Math.round((P.z + z) / w) * w, typeof col === 'function' ? col() : col, w]); } };
+    seg(J.pelvis, J.chest, 0.22, A); seg(J.chest, J.neck, 0.13, A); seg(J.neck, J.head, 0.17, f.headCol || A);
+    seg(J.pelvis, J.lKnee, 0.1, f.legs || A); seg(J.lKnee, J.lAnkle, 0.1, f.legs || A); seg(J.lAnkle, J.lToe, 0.07, f.legs || A);
+    seg(J.pelvis, J.rKnee, 0.1, f.legs || A); seg(J.rKnee, J.rAnkle, 0.1, f.legs || A);
+    seg(J.lSh, J.rSh, 0.1, A); seg(J.lSh, J.lElb, 0.08, f.arms || A); seg(J.lElb, J.lHand, 0.07, f.arms || A); seg(J.rSh, J.rElb, 0.08, f.arms || A); seg(J.rElb, J.rHand, 0.07, f.arms || A);
+    seg([0.2, 0.82, 0.2], [0.24, 0.7, 0.26], 0.08, () => pal(['#8a0a0a', '#a01010', '#6a0606'])); seg([0.24, 0.66, 0.28], [0.3, 0.1, 0.36], 0.03, '#7a0808');
+    if (f.cape) for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) if (rnd() < 0.85 - r * 0.05) fl.push([(c - 2) * w, 0.95 - r * w * 0.6, 0.1 - r * w * 0.9, pal(f.cape), w]);
+    for (let k = 0; k < 14; k++) { const a = k / 14 * TAU * 2; fl.push([J.lAnkle[0] + Math.cos(a) * 0.16, J.lAnkle[1] + Math.sin(a) * 0.16, J.lAnkle[2] + 0.12 - k * 0.025, f.coil || '#6a3036', 0.1]); }
+    if (f.props) f.props(seg, (x, y, z, c, s) => fl.push([x, y, z, c, s || w]));
+    stat(fl, true, figGroup);
+  }
+  function island(list, o) {
+    const S = 0.5;
+    for (let x = -6.5; x <= 6.5; x += S) for (let z = -6.5; z <= 6.5; z += S) {
+      const d = Math.hypot(x, z), edge = 6 + Math.sin(Math.atan2(z, x) * 5) * 0.4; if (d > edge) continue;
+      const depth = Math.floor((1 - d / edge) * 9 + rnd() * 2) + 1;
+      for (let k = 0; k < depth; k++) list.push([x, -S / 2 - k * S, z, k === 0 ? pal(o.top) : k === 1 ? pal(o.mid) : pal(o.deep), S]);
+    }
+    for (let i = 0; i < 26; i++) { const a = rnd() * TAU, d = rnd() * 3.5; list.push([Math.cos(a) * d, -4.5 - rnd() * 2.5, Math.sin(a) * d, pal(o.deep), S]); }
+    // blood pool and drag marks
+    for (let a = 0; a < TAU; a += 0.25) for (let rr = 0; rr < 0.75; rr += 0.12) list.push([FIG.x + 0.2 + Math.cos(a) * rr * 1.3, 0.04, FIG.z + 0.1 + Math.sin(a) * rr * 0.8, pal(['#3a0505', '#4a0808', '#2a0303']), [0.14, 0.06, 0.14]]);
+    for (const dx of [-0.25, 0.15]) for (let k = 0; k < 24; k++) list.push([FIG.x + dx - 0.4 - k * 0.05, 0.035, FIG.z - 0.2 - k * 0.14, pal(['#2a0404', '#3a0606']), [0.12, 0.05, 0.14]]);
+  }
+  function skull(list, x, y, z, w) { w = w || 0.11; for (let i = -1; i <= 1; i++) for (let j = 0; j <= 2; j++) for (let k = -1; k <= 1; k++) { const hole = k === 1 && j === 1 && i !== 0; list.push([x + i * w, y + 0.06 + j * w, z + k * w, hole ? '#0a0606' : pal(['#d6cbb5', '#cfc3ab', '#e0d6c2']), w]); } }
+
+  // reaching tendrils: CatmullRom from a source to a target, bulges travelling toward the target
+  function makeReach(o) { o.dm = dyn(o.n || 140); o.ctrl = o.points.map(p => p.clone()).concat([V3(), V3()]); return o; }
+  function drawReach(o, t, yank) {
+    const N = o.n || 140, tgt = (o.target || (() => local(J.lAnkle)))(); o.ctrl[o.ctrl.length - 1].copy(tgt); o.ctrl[o.ctrl.length - 2].set(tgt.x - 0.2, Math.max(0.25, tgt.y), tgt.z - 1.6);
+    const curve = new THREE.CatmullRomCurve3(o.ctrl, false, 'centripetal');
+    for (let i = 0; i < N; i++) { const u = i / (N - 1), P = curve.getPoint(u), b = RM * Math.pow(Math.max(0, Math.sin(TAU * (u * 3 - t / LOOP * 2))), 6); const r = ((o.r0 || 0.75) * (1 - u) + (o.r1 || 0.13)) * (1 + 0.5 * b) * 1.6; const stripe = o.stripe && (i % o.stripe === 0); o.dm.put(i, Math.round(P.x / 0.2) * 0.2, Math.round(P.y / 0.2) * 0.2, Math.round(P.z / 0.2) * 0.2, r, stripe ? o.stripeCol : mix(o.base, o.glow, Math.min(1, b + yank * 0.3))); }
+    o.dm.flush(); return curve;
+  }
+  function makeVeins(touch) { const pts = []; for (let b = 0; b < 9; b++) { let x = touch.x, z = touch.z, a = rnd() * TAU; for (let k = 0; k < 22; k++) { a += (rnd() - 0.5) * 0.9; x += Math.cos(a) * 0.26; z += Math.sin(a) * 0.26; if (Math.hypot(x, z) > 5.8) break; pts.push([x, z, k]); } } return { pts, dm: dyn(pts.length) }; }
+  function drawVeins(v, t, yank, base, glow) { v.pts.forEach((q, i) => { const w = Math.pow(Math.max(0, Math.sin(TAU * (q[2] / 22 - t / LOOP * 3))), 3); v.dm.put(i, q[0], 0.05, q[1], [0.2, 0.05, 0.2], mix(base, glow, Math.min(1.6, w * 1.6 + yank))); }); v.dm.flush(); }
+  // particles: 'fall' drifts down, 'rise' drifts up; integer speeds keep the loop seamless
+  function makeParticles(o) { o.dm = dyn(o.n); o.seeds = Array.from({ length: o.n }, (_, i) => ({ x: o.x[0] + rnd() * (o.x[1] - o.x[0]), z: o.z[0] + rnd() * (o.z[1] - o.z[0]), off: rnd(), k: 1 + (i % (o.speeds || 2)), c: pal(o.cols).slice ? pal(o.cols) : pal(o.cols) })); return o; }
+  function drawParticles(o, t) { o.seeds.forEach((s, i) => { const f = frac(t / LOOP * s.k + s.off), y = o.type === 'fall' ? o.y[1] - f * (o.y[1] - o.y[0]) : o.y[0] + f * (o.y[1] - o.y[0]); const sway = Math.sin(f * TAU * 2 + i) * (o.sway || 0.6); const fade = o.fade ? Math.sin(f * Math.PI) : 1; o.dm.put(i, s.x + sway, y, s.z + Math.cos(f * TAU + i) * (o.sway || 0.6) * 0.5, (o.size || 0.08) * (0.4 + 0.6 * fade), typeof s.c === 'string' ? H(s.c) : s.c, o.spin ? f * TAU * 2 + i : 0); }); o.dm.flush(); }
+  function stars(colA) {
+    const n = 1500, pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { const u = rnd() * 2 - 1, th = rnd() * TAU, r = 260; pos.set([Math.sqrt(1 - u * u) * Math.cos(th) * r, Math.abs(u) * r * 0.9 - 20, -Math.abs(Math.sqrt(1 - u * u) * Math.sin(th) * r) - 30], i * 3); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: new THREE.Color(colA || '#cfd6ff').convertSRGBToLinear(), size: 1.5, sizeAttenuation: false })));
+    const tw = []; for (let i = 0; i < 90; i++) { const a = rnd() * TAU, u = rnd() * 0.9 + 0.05; tw.push({ P: [Math.cos(a) * 240, -40 + u * 200, -220 - rnd() * 60], k: 1 + Math.floor(rnd() * 4), ph: rnd() * TAU, s: 1 + rnd() * 1.2 }); }
+    const dm = dyn(tw.length);
+    return t => { const p = t / LOOP * TAU; tw.forEach((s, i) => { const k = 0.35 + 0.65 * Math.max(0, Math.sin(p * s.k + s.ph)); dm.put(i, s.P[0], s.P[1], s.P[2], s.s, [k, k * 0.95, k * 1.1]); }); dm.flush(); };
+  }
+  // simple hanging/rising chain (forward kinematics): returns points
+  function chain(x, y, ang, n, step, waveFn) { const pts = []; let a = ang; for (let k = 0; k < n; k++) { a = ang + waveFn(k); x += Math.cos(a) * step; y += Math.sin(a) * step; pts.push([x, y, a]); } return pts; }
+
+  const api = { scene, camera, rnd, frac, H, pal, mix, scl, V3, LOOP, TAU, RM, reduced, stat, dyn, shell, eyes, eyePix, lidAt, lookCam, irisRGB, saccade, yankAt, sprite, softTex, rayTex, discTex, island, skull, buildFigure, makeReach, drawReach, makeVeins, drawVeins, makeParticles, drawParticles, stars, chain, FIG, J, local, figGroup, post };
+
+  // =====================================================================
+  // THEMES
+  // =====================================================================
+  const THEMES = {};
+
+  // ---------------- MYTHS: the World-Tree, its hydra, and Odin's eye ----------------
+  THEMES.myth = {
+    sub: 'Every myth was a field note',
+    menu: [['New Branch', 'The Norns have not woven this thread. Yet.'], ['Continue', 'Your save was eaten by a hydra. Two more grew back.'], ['Bestiary', 'Bestiary sealed. Offer an eye to Mimir first.'], ['Options', 'Difficulty: Greek tragedy. There is only one setting.'], ['Quit', 'Prometheus tried to leave too. Ask him about his liver.']],
+    bg: '#05070a', tint: [0.8, 0.9, 1.1], exposure: 1.0, light: '#ffb84a',
+    build(A) {
+      const E = A.V3(0, 4, -40), list = [], bark = [];
+      A.sprite('#1a3a3a', 160, 0.75, null, true).position.set(-50, 40, -170); A.sprite('#3a2a0a', 130, 0.55, null, true).position.set(60, 30, -170);
+      const rays = A.sprite('#ffd27a', 60, 0.18, A.rayTex); rays.position.set(0, 14, -46);
+      const halo = A.sprite('#ffb84a', 34, 0.35); halo.position.set(0, 10, -44);
+      const twinkle = A.stars('#e8e0c8');
+      // trunk: a ring of bark voxels, with gold runes
+      for (let y = -16; y <= 8; y += 0.8) { const R = 3.2 + Math.max(0, (-y - 8) * 0.12) + Math.max(0, (y - 4) * 0.2); const n = Math.round(TAU * R / 0.8); for (let k = 0; k < n; k++) { const a = k / n * TAU, rune = (Math.abs(Math.sin(a * 3 + y * 0.7)) < 0.05 && Math.sin(a) > -0.2); bark.push([E.x + Math.cos(a) * R, E.y + y, E.z + Math.sin(a) * R, rune ? [1.6, 1.1, 0.4] : pal(['#7a6248', '#6a5440', '#866c50', '#5a4636']), 0.85]); } }
+      // canopy branches (static), leaf clusters (shimmer)
+      const leaves = []; (function grow(x, y, ang, len, depth) { const ex = x + Math.cos(ang) * len, ey = y + Math.sin(ang) * len, n = Math.round(len / 0.5); for (let i = 0; i <= n; i++) bark.push([E.x + x + (ex - x) * i / n, E.y + y + (ey - y) * i / n, E.z + 1 + depth * 0.3, pal(['#7a6248', '#6a5440']), 0.9 - depth * 0.15]); if (depth < 4) { grow(ex, ey, ang + 0.35 + rnd() * 0.25, len * 0.72, depth + 1); grow(ex, ey, ang - 0.35 - rnd() * 0.25, len * 0.72, depth + 1); } else leaves.push([ex, ey]); })(0, 8, Math.PI / 2, 5, 0);
+      const leafCells = []; leaves.forEach(([x, y], li) => { for (let i = 0; i < 16; i++) leafCells.push({ x: E.x + x + (rnd() - 0.5) * 2.6, y: E.y + y + (rnd() - 0.5) * 2, z: E.z + 2 + (rnd() - 0.5) * 2, ph: rnd() * TAU, li }); });
+      const leafM = A.dyn(leafCells.length);
+      // roots hanging into the void
+      const roots = Array.from({ length: 11 }, (_, i) => ({ x: (i - 5) * 0.8, a: -Math.PI / 2 + (i - 5) * 0.12, off: rnd() * TAU }));
+      const rootM = A.dyn(roots.length * 26);
+      // Odin's eye in the trunk
+      const eyeShell = A.shell(E.x, E.y + 3, E.z + 2.2, 3.4, 0.3, { zmin: 0.5 });
+      // world serpent spiralling the trunk, and five hydra necks from the canopy
+      const SN = 170, serp = A.dyn(SN);
+      const necks = Array.from({ length: 5 }, (_, i) => ({ bx: (i - 2) * 3.2, by: 10 + (i % 2) * 1.5, a: Math.PI / 2 + (i - 2) * 0.5, off: rnd() * TAU }));
+      const neckM = A.dyn(necks.length * 12), headM = A.dyn(necks.length * 14);
+      // greek columns on the island
+      A.island(list, { top: ['#8a8a82', '#7a7a72', '#6e7466', '#827c70'], mid: ['#4a4640', '#3e3a35'], deep: ['#2e2a26', '#26221f'] });
+      for (let i = 0; i < 6; i++) { const a = Math.PI * (1.1 + i * 0.16), r = 4.9, h = Math.floor((2 + rnd() * 4) / 0.5), px = Math.round(Math.cos(a) * r / 0.5) * 0.5, pz = Math.round(Math.sin(a) * r / 0.5) * 0.5; for (let k = 0; k < h; k++) for (const [dx, dz] of [[0, 0], [0.25, 0], [-0.25, 0], [0, 0.25], [0, -0.25]]) list.push([px + dx, 0.25 + k * 0.5, pz + dz, (dx || dz) ? '#d8d2c2' : '#c8c2b2', 0.3]); list.push([px, 0.25 + h * 0.5, pz, '#e2dccc', [0.9, 0.3, 0.9]]); }
+      bark.forEach(v => { if (typeof v[3] === 'string') { const f = Math.max(0, Math.min(1, (v[2] - E.z) / 4)); v[3] = A.scl(A.H(v[3]), 0.45 + 0.75 * f); } }); A.stat(bark, false);
+      A.skull(list, 1.2, 0, 3.4); A.skull(list, 3.6, 0, 0.6); A.skull(list, -4.2, 0, 1.6);
+      // fallen shield
+      for (let a = 0; a < TAU; a += 0.2) for (let r = 0; r < 0.45; r += 0.1) list.push([A.FIG.x + 1.3 + Math.cos(a) * r, 0.08, A.FIG.z + 0.6 + Math.sin(a) * r, r > 0.35 ? '#c89a3a' : (r < 0.12 ? '#8a1a10' : '#a8782a'), [0.11, 0.05, 0.11]]);
+      // constellation beasts in the far sky (wolf, stag, scorpion)
+      const consts = [{ c: [-70, 34, -200], s: 4, pts: [[0, 0], [2, 1], [4, 1], [6, 0], [7, 2], [8, 1], [6, -2], [2, -2], [1, -4], [6, -4]] }, { c: [60, 40, -205], s: 4, pts: [[0, 0], [3, 0], [5, 1], [5, 4], [4, 6], [6, 6], [7, 8], [3, 0], [3, -3], [5, -3]] }, { c: [-10, 58, -230], s: 5, pts: [[0, 0], [1, 1], [3, 1], [5, 0], [6, -1], [7, 0], [8, 2], [8, 4], [7, 5]] }];
+      const cStars = [], cLines = [];
+      consts.forEach(cs => { cs.pts.forEach(([x, y], i) => { cStars.push([cs.c[0] + x * cs.s, cs.c[1] + y * cs.s, cs.c[2]]); if (i) { const [x0, y0] = cs.pts[i - 1]; for (let k = 1; k < 8; k++) cLines.push([cs.c[0] + (x0 + (x - x0) * k / 8) * cs.s, cs.c[1] + (y0 + (y - y0) * k / 8) * cs.s, cs.c[2]]); } }); });
+      cLines.forEach(q => list.push([q[0], q[1], q[2], [0.25, 0.32, 0.45], 0.5]));
+      const cStarM = A.dyn(cStars.length);
+      // drifting stone colossus heads, eyes shut until they all look at you
+      const heads = [[-58, 14, -130, 6], [62, 8, -138, 7], [-30, -14, -110, 4.5], [40, -18, -118, 5]].map(([x, y, z, R]) => ({ x, y, z, R, off: rnd(), sh: A.shell(x, y, z, R, 0.75) }));
+      const reach = A.makeReach({ points: [A.V3(0, -12, -37), A.V3(3, -4, -24), A.V3(1.5, 0.9, -8), A.V3(-2.2, 0.35, -0.8)], base: [0.16, 0.22, 0.1], glow: [1.2, 0.95, 0.3], stripe: 5, stripeCol: [0.5, 0.42, 0.18] });
+      const veins = A.makeVeins(A.V3(-2.2, 0, -0.8));
+      const leavesFall = A.makeParticles({ type: 'fall', n: 70, x: [-30, 30], y: [-8, 36], z: [-40, 6], cols: ['#e6b84a', '#c8a03a', '#ffd27a'], size: 0.3, sway: 0.9, spin: true });
+      A.buildFigure({ armor: ['#8a6a3a', '#a07a42', '#6a5230'], headCol: () => pal(['#a07a42', '#8a6a3a']), cape: ['#7a1a14', '#8a2018'], coil: '#2a3a1a',
+        props: (seg, push) => { seg([-0.5, 0, 1.0], [-0.5, 1.0, 0.92], 0.035, '#8a6a4a'); seg([-0.5, 1.0, 0.92], [-0.5, 1.2, 0.9], 0.05, '#c0c4ca'); for (let z = -0.2; z <= 0.2; z += 0.1) push(0.04, 1.42, 0.58 + z, '#b0201a'); } });
+      A.stat(list, true);
+      const iris = [1.0, 0.75, 0.25];
+      return (t, c) => {
+        const p = t / LOOP * TAU; twinkle(t);
+        rays.material.rotation = p / 7; halo.material.opacity = 0.3 + 0.2 * c.yank;
+        leafCells.forEach((l, i) => { const k = 0.6 + 0.4 * Math.sin(p * 2 + l.ph); leafM.put(i, l.x + RM * 0.15 * Math.sin(p + l.ph), l.y, l.z, 0.6, l.li % 3 ? [0.9 * k + 0.2, 0.7 * k + 0.1, 0.2] : [0.2, 0.7 * k + 0.2, 0.6 * k + 0.2]); }); leafM.flush();
+        let ri = 0; roots.forEach(r => { A.chain(E.x + r.x, E.y - 16.5, r.a, 26, 0.6, k => RM * 0.4 * (k / 26) * Math.sin(p * 2 + k * 0.3 + r.off)).forEach(([x, y]) => rootM.put(ri++, x, y, E.z, 0.7 - 0.015 * (ri % 26), [0.24, 0.17, 0.12])); }); rootM.flush();
+        eyeShell.update(cell => { const n = cell.n; const e = A.eyePix(n[0] / 0.9, n[1] / 0.9, c.open, c.gaze[0], c.gaze[1], iris, { pw: c.pupil }); return e || [0.3 + cell.nz * 0.1, 0.22, 0.15]; }, 1 + 0.02 * c.yank);
+        for (let i = 0; i < SN; i++) { const u = i / SN, y = -14 + u * 21, a = u * TAU * 3 + p, R = 4.6 + Math.max(0, (-y - 8) * 0.12); const sc = (i + Math.floor(t / LOOP * SN)) % 4 === 0; serp.put(i, E.x + Math.cos(a) * R, E.y + y, E.z + Math.sin(a) * R, 1.5 * (0.6 + 0.4 * Math.sin(u * Math.PI)), sc ? [0.55, 0.45, 0.2] : [0.14, 0.24, 0.12]); } serp.flush();
+        let ni = 0, hi = 0; necks.forEach((nk, j) => { const pts = A.chain(E.x + nk.bx, E.y + nk.by, nk.a, 12, 0.9, k => RM * (0.5 * (k / 16) * Math.sin(p * 2 + k * 0.4 + nk.off) - 0.06 * c.yank * k)); pts.forEach(([x, y], k) => neckM.put(ni++, x, y, E.z + 5, 1.15 - k * 0.02, k % 3 ? [0.32, 0.6, 0.28] : [0.8, 0.65, 0.3])); const [hx, hy, ha] = pts[pts.length - 1], jaw = 0.25 + 0.6 * c.yank + 0.15 * Math.max(0, Math.sin(p * 3 + j));
+          const cs = Math.cos(ha), sn = Math.sin(ha), at = (f, s) => [hx + cs * f - sn * s, hy + sn * f + cs * s];
+          [[0, 0], [0.8, 0], [1.6, 0], [0, 0.7], [0.8, 0.7]].forEach(([f, s]) => { const q = at(f, s * 0.6 + 0.2); headM.put(hi++, q[0], q[1], E.z + 5, 0.9, [0.3, 0.55, 0.26]); });
+          [[0.6, -0.4 - jaw], [1.4, -0.4 - jaw], [2.0, -0.3 - jaw]].forEach(([f, s]) => { const q = at(f, s); headM.put(hi++, q[0], q[1], E.z + 5, 0.75, [0.26, 0.46, 0.22]); });
+          [[1.5, 0.75], [1.5, -0.05]].forEach(([f, s]) => { const q = at(f, s); headM.put(hi++, q[0], q[1], E.z + 5.6, 0.45, [2.2, 1.4, 0.3]); });
+          [[2.1, -0.1], [2.1, -0.2 - jaw * 0.5], [1.7, -0.15], [1.7, -0.25 - jaw * 0.5]].forEach(([f, s]) => { const q = at(f, s); headM.put(hi++, q[0], q[1], E.z + 5.4, 0.3, [0.95, 0.92, 0.85]); });
+          const q = at(2.4 + jaw * 0.5, -0.2 - jaw * 0.3); headM.put(hi++, q[0], q[1], E.z + 5.3, [0.6, 0.15, 0.15], [0.9, 0.1, 0.12]); });
+        neckM.flush(); headM.flush();
+        cStars.forEach((s, i) => { const k = 0.6 + 0.6 * Math.max(0, Math.sin(p * (1 + i % 3) + i)); cStarM.put(i, s[0], s[1], s[2], 1.6, [k * 1.4, k * 1.3, k]); }); cStarM.flush();
+        heads.forEach(h => { const o = c.lc; h.sh.cz = h.z; h.sh.cy = h.y + RM * Math.sin(p + h.off * 6) * 0.8; h.sh.update(cell => { const n = cell.n, lit = 0.35 + 0.65 * Math.max(0, n[1] * 0.3 + n[2] * 0.9); for (const sx of [-0.35, 0.35]) { const e = n[2] > 0.3 ? A.eyePix((n[0] - sx) / 0.25, (n[1] - 0.12) / 0.25, o, 0, 0, [1.4, 0.9, 0.3], { round: true, lid: [0.3, 0.3, 0.28] }) : null; if (e) return e; } if (n[2] > 0.6 && Math.abs(n[0]) < 0.08 && n[1] < 0.05 && n[1] > -0.3) return [0.35 * lit, 0.34 * lit, 0.32 * lit]; return [(0.62 - cell.nz * 0.15) * lit, (0.6 - cell.nz * 0.15) * lit, (0.55 - cell.nz * 0.12) * lit]; }, 1); });
+        A.drawReach(reach, t, c.yank); A.drawVeins(veins, t, c.yank, [0.35, 0.28, 0.08], [1.8, 1.4, 0.4]); A.drawParticles(leavesFall, t);
+      };
+    },
+  };
+
+  // ---------------- HUMAN EVOLUTION: the Next Human ----------------
+  THEMES.human = {
+    sub: 'You are the missing link',
+    menu: [['New Branch', 'Evolution is still loading. ETA: 4 million years.'], ['Continue', 'Your save was overwritten by a better-adapted save.'], ['Bestiary', 'Locked. Grow a bigger frontal lobe first.'], ['Options', 'Difficulty: natural selection. It does not care.'], ['Quit', 'Extinction is not a menu option. It is a schedule.']],
+    bg: '#06050a', tint: [1.1, 0.85, 0.8], exposure: 1.0, light: '#ff6a3a',
+    build(A) {
+      const E = A.V3(0, 13, -40), list = [];
+      A.sprite('#3a1a10', 150, 0.7, null, true).position.set(-45, 40, -170); A.sprite('#102a3a', 130, 0.6, null, true).position.set(55, 25, -170);
+      const rays = A.sprite('#ffc89a', 70, 0.16, A.rayTex); rays.position.set(E.x, E.y, E.z - 6);
+      const glow = A.sprite('#ff9a5a', 40, 0.3); glow.position.set(E.x, E.y, E.z - 3);
+      const twinkle = A.stars('#ffe8d0');
+      // the Next Human: an enormous fetal head with one sleeping eye, inside an amniotic orb
+      const head = A.shell(E.x, E.y, E.z, 8, 0.36, { sy: 1.1, zmin: -1 });
+      const orb = A.shell(E.x, E.y, E.z, 12.5, 0.9, { zmin: -4 });
+      // DNA spires
+      const spires = [[-34, -72], [34, -72], [-62, -95], [62, -95]].map(([x, z], i) => ({ x, z, off: i * 1.3 }));
+      const dnaM = A.dyn(spires.length * 90 * 2 + spires.length * 30 * 6);
+      // ancestral skulls drifting like moons
+      const skulls = [[-56, 22, -130, 5], [58, 30, -140, 6], [-36, -10, -115, 4], [44, -14, -120, 4.4], [12, 46, -170, 5]].map(([x, y, z, R]) => ({ x, y, z, R, off: rnd(), sh: A.shell(x, y, z, R, 0.65, { sy: 1.15 }) }));
+      // the march of progress on a ridge behind the island: hunched ape -> upright -> elongated future form
+      const march = [];
+      for (let i = 0; i < 9; i++) { const k = i / 8, x = -16 + i * 4, z = -12 - Math.abs(i - 4) * 0.8, h = 1.4 + k * 1.6 + (k > 0.75 ? (k - 0.75) * 6 : 0), hunch = (1 - Math.min(1, k * 1.6)) * 0.6, s = 0.22, col = k < 0.8 ? pal(['#5a4034', '#4a362c']) : '#4a4a6a';
+        for (let y = 0; y < h; y += s) { const lean = hunch * (y / h) * 1.2; list.push([x + lean, 1 + y, z, col, s]); if (y > h * 0.55 && y < h * 0.8) list.push([x + lean + 0.22, 1 + y, z, col, s]); }
+        const hs = 0.35 + (k > 0.75 ? (k - 0.75) * 1.6 : 0); for (let a = 0; a < TAU; a += 0.5) list.push([x + hunch * 1.2 + Math.cos(a) * hs * 0.6, 1 + h + 0.2 + Math.sin(a) * hs * 0.6, z, col, 0.24]);
+        for (let y = 0; y < h * 0.45; y += s) list.push([x + hunch * 1.2 + 0.25 + (1 - k) * y * 0.3, 1 + h * 0.75 - y, z + 0.1, col, s * 0.9]);
+        march.push({ x: x + hunch * 1.2, y: 1 + h + 0.2, z, k }); }
+      for (let x = -20; x <= 20; x += 0.8) list.push([x, 0.6, -12 - Math.abs(x / 4) * 0.2, '#2a2228', 0.8]);
+      // island: standing stones, campfire
+      A.island(list, { top: ['#4a4a40', '#3e4436', '#52503f'], mid: ['#34302a', '#2c2824'], deep: ['#221f1c', '#1c1917'] });
+      for (let i = 0; i < 7; i++) { const a = Math.PI * (1.05 + i * 0.15), r = 4.9, h = Math.floor((2 + rnd() * 2.5) / 0.5), px = Math.cos(a) * r, pz = Math.sin(a) * r; for (let k = 0; k < h; k++) list.push([px, 0.25 + k * 0.5, pz, pal(['#6a6a62', '#5a5a52', '#727068']), [0.9, 0.5, 0.5]]); }
+      A.skull(list, 1.2, 0, 3.4); A.skull(list, 3.6, 0, 0.6); A.skull(list, 0.6, 0, -2.6);
+      // two other humans standing frozen, tethered by cords
+      const others = [[2.2, -1.2], [-3.6, -2.4]];
+      others.forEach(([x, z]) => { for (let y = 0; y < 1.7; y += 0.12) { const w = y > 1.4 ? 0.2 : (y > 0.9 ? 0.32 : 0.18); for (let dx = -w; dx <= w; dx += 0.12) list.push([x + dx, y, z, y > 1.4 ? '#a07a62' : pal(['#5a3a2a', '#4a3024']), 0.12]); } });
+      const cords = [
+        A.makeReach({ points: [A.V3(E.x, E.y - 9, E.z + 2), A.V3(2, 3, -24), A.V3(0, 1.2, -8), A.V3(-2.2, 0.4, -0.8)], base: [0.42, 0.18, 0.22], glow: [1.4, 0.6, 0.5], r0: 0.5, r1: 0.1, target: () => A.local(A.J.chest) }),
+        A.makeReach({ n: 90, points: [A.V3(E.x + 3, E.y - 9, E.z + 2), A.V3(5, 4, -20), A.V3(3, 2.5, -6)], base: [0.42, 0.18, 0.22], glow: [1.4, 0.6, 0.5], r0: 0.35, r1: 0.08, target: () => A.V3(2.2, 1.3, -1.25) }),
+        A.makeReach({ n: 90, points: [A.V3(E.x - 3, E.y - 9, E.z + 2), A.V3(-6, 4, -22), A.V3(-4.5, 2.6, -8)], base: [0.42, 0.18, 0.22], glow: [1.4, 0.6, 0.5], r0: 0.35, r1: 0.08, target: () => A.V3(-3.6, 1.3, -2.45) }),
+      ];
+      const veins = A.makeVeins(A.V3(-2.2, 0, -0.8));
+      const motes = A.makeParticles({ type: 'rise', n: 180, x: [-30, 30], y: [-10, 34], z: [-40, 4], cols: ['#ffb070', '#ffd0a0', '#e08a50'], size: 0.12, sway: 0.5, fade: true });
+      const fire = A.makeParticles({ type: 'rise', n: 26, x: [2.4, 2.8], y: [0.15, 1.3], z: [2.2, 2.6], cols: ['#fff1b0', '#ffd27a', '#ffa24a', '#ff7a3d'], size: 0.16, sway: 0.08, speeds: 4, fade: true });
+      for (let a = 0; a < TAU; a += 0.4) list.push([2.6 + Math.cos(a) * 0.45, 0.08, 2.4 + Math.sin(a) * 0.45, '#2a2420', 0.16]);
+      A.buildFigure({ armor: ['#6a4a34', '#5a3e2c', '#7a5640'], headCol: () => pal(['#8a6248', '#7a5640']), legs: () => pal(['#8a6248', '#7a5640']), arms: () => pal(['#8a6248', '#7a5640']), coil: '#6a2a30',
+        props: (seg, push) => { seg([-0.5, 0.2, 1.0], [-0.5, 1.0, 0.92], 0.04, '#4a3020'); for (let k = 0; k < 4; k++) push(-0.5 + (k % 2) * 0.08, 1.05 + k * 0.08, 0.92, k > 1 ? '#ffd27a' : '#ff7a3d', 0.1); } });
+      A.stat(list, true);
+      const iris = [0.25, 0.5, 0.75];
+      return (t, c) => {
+        const p = t / LOOP * TAU; twinkle(t);
+        rays.material.rotation = -p / 7; glow.material.opacity = 0.25 + 0.2 * c.yank + 0.06 * Math.sin(p * 2);
+        const open = Math.max(0.05 + 0.15 * c.yank, c.lc) * c.open;
+        head.update(cell => { const n = cell.n, lit = 0.4 + 0.6 * Math.max(0, n[1] * 0.25 + n[2] * 0.9);
+          if (n[2] > 0.2) { const e = A.eyePix(n[0] / 0.55, (n[1] + 0.05) / 0.55, open, c.gaze[0], c.gaze[1], iris, { human: true, pw: 0.1 + 0.05 * c.yank, lid: [0.55, 0.3, 0.3], sclera: [0.95, 0.9, 0.86] }); if (e) return e; }
+          const vein = Math.abs(cell.w) < 0.07 && n[1] > -0.4; return vein ? [0.3 * lit, 0.35 * lit, 0.75 * lit] : [(0.95 - cell.nz * 0.12) * lit, (0.68 - cell.nz * 0.1) * lit, (0.62 - cell.nz * 0.1) * lit]; }, 1 + RM * 0.02 * Math.sin(p * 2) + 0.03 * c.yank);
+        orb.update(cell => { const s = Math.sin(p * 2 + cell.n[0] * 9 + cell.n[1] * 7 + cell.nz * 6); if (Math.abs(cell.n[2]) > 0.35 ? s < 0.96 : s < 0.5) return null; return [1.1 * Math.max(0.3, s), 0.62 * Math.max(0.3, s), 0.25 * Math.max(0.3, s)]; }, 1 + RM * 0.012 * Math.sin(p * 2 + 1));
+        let di = 0; spires.forEach(s => { for (let k = 0; k < 90; k++) { const y = -40 + k * 1.0, a = k * 0.28 + p + s.off; for (const sg of [0, Math.PI]) dnaM.put(di++, s.x + Math.cos(a + sg) * 3, y, s.z + Math.sin(a + sg) * 3, 0.9, sg ? [0.35, 0.55, 0.9] : [0.9, 0.45, 0.35]); if (k % 3 === 0) for (let r = 1; r <= 6; r++) { const u = r / 7 * 2 - 1; dnaM.put(di++, s.x + Math.cos(a) * 3 * u, y, s.z + Math.sin(a) * 3 * u, 0.45, [0.6, 0.6, 0.55]); } } }); dnaM.flush();
+        skulls.forEach(s => { s.sh.cy = s.y + RM * Math.sin(p + s.off * 6) * 0.9; s.sh.update(cell => { const n = cell.n, lit = 0.35 + 0.65 * Math.max(0, n[1] * 0.3 + n[2] * 0.9); if (n[2] > 0.3) { for (const sx of [-0.33, 0.33]) if (((n[0] - sx) / 0.2) ** 2 + ((n[1] - 0.05) / 0.17) ** 2 < 1) return c.lc > 0.5 ? [1.6, 0.4, 0.2] : [0.03, 0.02, 0.02]; if (Math.abs(n[0]) < 0.08 && n[1] < -0.12 && n[1] > -0.32) return [0.04, 0.03, 0.03]; if (n[1] < -0.45 && n[1] > -0.58 && Math.abs(n[0]) < 0.35) return Math.round(n[0] * 18) % 2 ? [0.9, 0.86, 0.75] : [0.1, 0.08, 0.06]; } return [(0.78 - cell.nz * 0.15) * lit, (0.72 - cell.nz * 0.15) * lit, (0.6 - cell.nz * 0.12) * lit]; }, 1); });
+        cords.forEach(cd => A.drawReach(cd, t, c.yank)); A.drawVeins(veins, t, c.yank, [0.3, 0.12, 0.12], [1.6, 0.5, 0.4]); A.drawParticles(motes, t); A.drawParticles(fire, t);
+      };
+    },
+  };
+
+  // ---------------- ANIME: the Celestial Titan ----------------
+  THEMES.anime = {
+    sub: 'Power level: unfathomable',
+    menu: [['New Branch', 'Episode 1 is still in production. Since 1998.'], ['Continue', 'Previously on Strange Branches: you lost.'], ['Bestiary', 'Locked. Scream its name louder.'], ['Options', 'Difficulty: final arc. There is only one setting.'], ['Quit', 'Get in the robot. You cannot quit.']],
+    bg: '#07040c', tint: [1.1, 0.75, 1.05], exposure: 1.0, light: '#4ad8ff',
+    build(A) {
+      const E = A.V3(0, 12, -42), list = [];
+      A.sprite('#3a0a2a', 170, 0.75, null, true).position.set(-40, 35, -180); A.sprite('#0a2a3a', 140, 0.6, null, true).position.set(60, 25, -175);
+      const moon = A.sprite('#ff3a4a', 90, 0.85, A.discTex, true); moon.position.set(0, 20, -190);
+      const rays = A.sprite('#7af0ff', 80, 0.18, A.rayTex); rays.position.set(E.x, E.y + 6, E.z - 6);
+      const twinkle = A.stars('#ffd0f0');
+      // the titan: armoured torso, arms flung wide, one visor eye; body trails off into ribbons
+      const titan = new THREE.Group(); A.scene.add(titan); const tl = [], s = 0.9;
+      const body = (x0, x1, y0, y1, z0, z1, col) => { for (let x = x0; x <= x1; x += s) for (let y = y0; y <= y1; y += s) for (let z = z0; z <= z1; z += s) tl.push([E.x + x, E.y + y, E.z + z, typeof col === 'function' ? col(x, y, z) : col, s]); };
+      const armor = (x, y) => (Math.abs(x) < 0.5 || Math.abs(y - 2) < 0.5) ? '#b0182a' : pal(['#e8e4ec', '#d8d4e0', '#c8c4d2']);
+      body(-4.5, 4.5, -6, 4, -1.5, 1.5, armor); body(-3.2, 3.2, -10, -6.5, -1, 1, (x, y) => pal(['#c8c4d2', '#b8b4c4'])); body(-6.5, -4.5, 2, 4.5, -1.5, 1.5, '#d8d4e0'); body(4.5, 6.5, 2, 4.5, -1.5, 1.5, '#d8d4e0');
+      body(-18, -6.5, 2.4, 3.6, -0.6, 0.6, (x) => Math.abs(x + 12) < 0.5 ? '#b0182a' : '#e0dcea'); body(6.5, 18, 2.4, 3.6, -0.6, 0.6, (x) => Math.abs(x - 12) < 0.5 ? '#b0182a' : '#e0dcea');
+      body(-21, -18, 1.5, 4.5, -0.6, 0.6, '#2a2430'); body(18, 21, 1.5, 4.5, -0.6, 0.6, '#2a2430');
+      body(-2.6, 2.6, 4.5, 9, -2.2, 2.2, (x, y) => y > 8 ? '#2a2430' : '#e8e4ec'); body(-3.4, -2.6, 7, 11, -0.4, 0.4, '#e8e4ec'); body(2.6, 3.4, 7, 11, -0.4, 0.4, '#e8e4ec');
+      tl.forEach(v => { if (typeof v[3] === 'string') { const c = A.H(v[3]), k = 0.55 + 0.45 * Math.min(1, Math.max(0, (v[1] - E.y + 10) / 20)); v[3] = A.scl(c, k); } }); A.stat(tl, false, titan);
+      const visor = A.dyn(60, false, titan); const vCells = []; for (let i = -6; i <= 6; i++) for (let j = -1; j <= 1; j++) vCells.push([i, j]);
+      const ribbons = Array.from({ length: 8 }, (_, i) => ({ x: (i - 3.5) * 0.9, off: rnd() * TAU })); const ribM = A.dyn(8 * 30, false, titan);
+      const halo = Array.from({ length: 64 }, (_, i) => i); const haloM = A.dyn(64 * 2 + 12);
+      // crystalline wings
+      const wings = []; for (const side of [-1, 1]) for (let w = 0; w < 3; w++) for (let j = 0; j < 6; j++) wings.push({ side, w, j, base: (side > 0 ? 0 : Math.PI) + side * (0.7 - w * 0.45), spread: side * (j - 2.5) * 0.08, len: 9 + (2.5 - Math.abs(j - 2.5)) * 1.6, off: rnd() * TAU });
+      const wingM = A.dyn(wings.length * 24);
+      // floating torii gates and cel clouds
+      const torii = [[-40, 20, -110, 1.6], [46, 12, -120, 1.8], [-24, -8, -90, 1.2], [30, 34, -150, 2.2], [-58, 2, -140, 2]].map(([x, y, z, k]) => ({ x, y, z, k, off: rnd() * TAU, cells: [] }));
+      torii.forEach(g => { const k = g.k; for (let y = 0; y < 7; y += 0.7) for (const x of [-2.5, 2.5]) g.cells.push([x * k, y * k, '#c0202a']); for (let x = -4; x <= 4; x += 0.7) { g.cells.push([x * k, 7 * k, '#1a1418']); g.cells.push([x * k * 0.8, 5.6 * k, '#c0202a']); } });
+      const toriiM = A.dyn(torii.reduce((a, g) => a + g.cells.length, 0));
+      for (let i = 0; i < 9; i++) { const cx = (rnd() - 0.5) * 160, cy = -20 + rnd() * 18, cz = -100 - rnd() * 60, w = 14 + rnd() * 20; for (let x = -w; x <= w; x += 2.2) for (let y = 0; y < 3 + rnd() * 3; y += 2.2) list.push([cx + x, cy + y + Math.abs(Math.sin(x * 0.3)) * 2, cz, y > 2 ? '#2a1a3a' : '#1a1028', 2.4]); }
+      // giant katana stuck in the void behind the island
+      for (let y = -14; y < 8; y += 0.6) list.push([7.5, y, -16, y > 5 ? '#2a1418' : [0.75 + (y + 14) * 0.008, 0.78, 0.85], [0.35, 0.65, 0.3]]); for (let x = -1.4; x <= 1.4; x += 0.4) list.push([7.5 + x, 5, -16, '#c8a03a', 0.45]);
+      A.island(list, { top: ['#3a3a48', '#34344a', '#40404e', '#4a2a3a'], mid: ['#2a2434', '#241f2c'], deep: ['#1a1622', '#16121c'] });
+      // a torii and stone lanterns on the island
+      for (let y = 0; y < 4; y += 0.4) for (const x of [-1.8, 1.8]) list.push([x + 0.5, y, -4.6, '#c0202a', 0.4]); for (let x = -2.6; x <= 3.6; x += 0.4) { list.push([x, 4, -4.6, '#1a1418', 0.45]); list.push([x * 0.85 + 0.1, 3.3, -4.6, '#c0202a', 0.35]); }
+      const lanterns = [[3.6, 1.2], [-4.2, -0.6], [4.4, -2.6]]; lanterns.forEach(([x, z]) => { for (let y = 0; y < 1.4; y += 0.25) list.push([x, y, z, '#6a6a72', 0.3]); list.push([x, 1.5, z, '#8a8a92', [0.6, 0.15, 0.6]]); });
+      const lanternM = A.dyn(lanterns.length);
+      const seal = A.makeReach({ points: [A.V3(E.x + 2, E.y - 10, E.z + 3), A.V3(3, 2, -24), A.V3(0, 1.0, -8), A.V3(-2.2, 0.35, -0.8)], base: [0.1, 0.5, 0.7], glow: [0.8, 2.0, 2.4], r0: 0.4, r1: 0.12, stripe: 4, stripeCol: [1.6, 0.4, 1.4] });
+      const veins = A.makeVeins(A.V3(-2.2, 0, -0.8));
+      const petals = A.makeParticles({ type: 'fall', n: 240, x: [-32, 32], y: [-8, 38], z: [-40, 8], cols: ['#ffb0d0', '#ff8ab8', '#ffd0e4', '#ffffff'], size: 0.16, sway: 1.1, spin: true });
+      const sparks = A.makeParticles({ type: 'rise', n: 40, x: [-2.6, -1.2], y: [0, 2.4], z: [1.6, 2.8], cols: ['#7af0ff', '#ffffff', '#ff8ad8'], size: 0.08, sway: 0.2, speeds: 3, fade: true });
+      A.buildFigure({ armor: ['#e8e4ec', '#d8d4e0', '#cfcad8'], legs: () => pal(['#1a1620', '#24202c']), headCol: () => pal(['#1a1418', '#241c22']), coil: '#4ad0e0',
+        props: (seg, push) => { seg([-0.5, 0, 1.0], [-0.5, 0.55, 0.96], 0.03, '#c8d0dc'); seg([-0.5, 0.55, 0.96], [-0.5, 0.75, 0.95], 0.04, '#1a1418'); push(0.95, 0.04, 1.3, '#c8d0dc'); push(1.05, 0.04, 1.42, '#c8d0dc'); } });
+      const scarf = A.dyn(18, false, A.figGroup);
+      A.stat(list, true);
+      const iris = [0.3, 0.9, 1.0];
+      return (t, c) => {
+        const p = t / LOOP * TAU; twinkle(t);
+        titan.position.y = RM * Math.sin(p) * 0.5 + c.yank * 0.3; rays.material.rotation = p / 7; moon.material.opacity = 0.8 + 0.1 * Math.sin(p * 2);
+        vCells.forEach(([i, j], k) => { const u = i / 6, v = j / 1.4; const e = A.eyePix(u, v, c.open, c.gaze[0] * 1.4, 0, iris, { pw: c.pupil, lid: [0.1, 0.08, 0.12], sclera: [0.15, 0.2, 0.3] }) || [0.12, 0.1, 0.14]; visor.put(k, E.x + i * 0.4, E.y + 7.2 + j * 0.4, E.z + 2.4, 0.42, e); }); visor.flush();
+        let ri = 0; ribbons.forEach(r => { A.chain(E.x + r.x, E.y - 10, -Math.PI / 2, 30, 0.6, k => RM * 0.5 * (k / 30) * Math.sin(p * 2 + k * 0.3 + r.off)).forEach(([x, y], k) => ribM.put(ri++, x, y, E.z, 0.7 - k * 0.015, k % 6 === 0 ? [0.8, 0.1, 0.18] : [0.85, 0.83, 0.9])); }); ribM.flush();
+        let hi = 0; for (let k = 0; k < 64; k++) { const a = k / 64 * TAU + p / 4, gap = (k % 8) === 0; if (!gap) haloM.put(hi++, E.x + Math.cos(a) * 7, E.y + 7.5 + titan.position.y + Math.sin(a) * 7, E.z - 1.5, 0.55, k % 8 === 4 ? [2.2, 1.8, 0.6] : [1.2, 1.0, 0.5]); const b = -k / 64 * TAU + p / 4; haloM.put(hi++, E.x + Math.cos(b) * 8.6, E.y + 7.5 + titan.position.y + Math.sin(b) * 8.6, E.z - 1.6, 0.3, [0.5, 1.4, 1.6]); } for (; hi < 64 * 2 + 12; hi++) haloM.put(hi, 0, -999, 0, 0.01, [0, 0, 0]); haloM.flush();
+        let wi = 0; wings.forEach(w => { const flap = RM * (0.1 * Math.sin(p + w.w * 0.7) + 0.03 * Math.sin(3 * p + w.off)), a = w.base + w.spread + w.side * flap, rx = E.x + w.side * 5.5, ry = E.y + 3 + titan.position.y; for (let k = 0; k < 24; k++) { const f = k / 24, hue = (f + p / TAU + w.j * 0.05) % 1, col = hue < 0.5 ? A.mix([0.4, 1.6, 2.0], [1.8, 0.5, 1.6], hue * 2) : A.mix([1.8, 0.5, 1.6], [0.4, 1.6, 2.0], (hue - 0.5) * 2); wingM.put(wi++, rx + Math.cos(a) * w.len * f, ry + Math.sin(a) * w.len * f, E.z + 0.5 + w.w * 0.3, 0.55 * (1 - f * 0.6), A.scl(col, 0.6 + 0.4 * f)); } }); wingM.flush();
+        let ti = 0; torii.forEach(g => { const y = g.y + RM * Math.sin(p + g.off) * 1.2; g.cells.forEach(cl => toriiM.put(ti++, g.x + cl[0], y + cl[1], g.z, 0.75 * g.k, A.H(cl[2]))); }); toriiM.flush();
+        lanterns.forEach(([x, z], i) => lanternM.put(i, x, 1.2, z, 0.35, [1.8 + 0.4 * Math.sin(p * 5 + i), 1.2, 0.5])); lanternM.flush();
+        for (let k = 0; k < 18; k++) { const r = Math.floor(k / 3), cc = k % 3; scarf.put(k, -0.1 + cc * 0.1 + RM * Math.sin(p * 4 + r) * 0.04 * r, 1.12 - r * 0.02 + RM * Math.sin(p * 3 + r * 0.7) * 0.03 * r, 0.3 - r * 0.14, 0.1, [0.8, 0.08, 0.12]); } scarf.flush();
+        A.drawReach(seal, t, c.yank); A.drawVeins(veins, t, c.yank, [0.1, 0.25, 0.4], [0.6, 1.6, 2.0]); A.drawParticles(petals, t); A.drawParticles(sparks, t);
+      };
+    },
+  };
+
+  // ---------------- PARASITE / FUNGI: the Mother Bloom ----------------
+  THEMES.fungi = {
+    sub: 'Ophiocordyceps sends its regards',
+    menu: [['New Branch', 'Spawning new branch. And spores. Mostly spores.'], ['Continue', 'Your save file has grown a fruiting body.'], ['Bestiary', 'Locked. Hold your breath and try again.'], ['Options', 'Difficulty: infected. There is only one setting.'], ['Quit', 'You cannot quit. The mycelium remembers you.']],
+    bg: '#050705', tint: [0.9, 1.1, 0.8], exposure: 1.0, light: '#b8f04a',
+    build(A) {
+      const E = A.V3(0, 10, -40), list = [];
+      A.sprite('#1a2a0a', 160, 0.8, null, true).position.set(-40, 30, -170); A.sprite('#2a1a0a', 140, 0.6, null, true).position.set(55, 20, -170);
+      const glow = A.sprite('#c8e05a', 48, 0.28); glow.position.set(E.x, E.y - 3, E.z - 2);
+      const twinkle = A.stars('#e0f0c0');
+      // colossal ribcage of whatever it grew out of
+      for (let r = 0; r < 7; r++) for (let a = 0; a <= Math.PI; a += 0.06) { const R = 14 - Math.abs(r - 3) * 1.2; list.push([E.x + Math.cos(a) * R, E.y - 22 + Math.sin(a) * R * 0.8, E.z - 6 + r * 2.4, pal(['#d6cbb5', '#c4b89e', '#b8a98a']), 0.9]); }
+      for (let z = -8; z < 12; z += 0.8) list.push([E.x, E.y - 22 + Math.sin(z * 0.2) * 0.5, E.z + z, '#c4b89e', 1.1]);
+      // the stalk
+      for (let y = -16; y <= 2; y += 0.7) { const R = 2.6 + Math.max(0, (-y - 10) * 0.25), n = Math.round(TAU * R / 0.7); for (let k = 0; k < n; k++) { const a = k / n * TAU, line = Math.abs(Math.sin(a * 5 + y * 0.4)) < 0.08; list.push([E.x + Math.cos(a) * R, E.y + y, E.z + Math.sin(a) * R, line ? [1.0, 1.3, 0.3] : pal(['#c8b890', '#b8a87e', '#d8c8a0']), 0.75]); } }
+      // the cap: a wrinkled brain-like dome with glowing gills underneath
+      const cap = A.shell(E.x, E.y + 4, E.z, 10, 0.42, { sy: 0.55, zmin: -3 });
+      // cordyceps stalks around the cap and the island, each ending in a bulb (some open as eyes)
+      const stalks = []; for (let i = 0; i < 14; i++) { const a = Math.PI * (0.1 + 0.8 * i / 13); stalks.push({ x: E.x + Math.cos(a) * 9, y: E.y + 4 + Math.sin(a) * 4, z: E.z + 2, a: a * 0.6 + Math.PI * 0.2, n: 14 + (i % 3) * 4, off: rnd() * TAU }); }
+      [[-3.5, -3], [3.8, -2.8], [-5, 1.2], [4.6, 1.8]].forEach(([x, z]) => stalks.push({ x, y: 0, z, a: Math.PI / 2, n: 8, off: rnd() * TAU, small: true }));
+      const stalkM = A.dyn(stalks.reduce((a, s) => a + s.n, 0)); const bulbEyes = A.eyes(stalks.length, 0.55, 0.16);
+      // overgrown city on the horizon
+      const towers = []; for (let i = 0; i < 16; i++) { const x = -110 + i * 14 + (rnd() - 0.5) * 6, h = 20 + rnd() * 50, z = -150 - rnd() * 40, w = 5 + rnd() * 4; towers.push({ x, h, z, w }); for (let y = -40; y < h - 40; y += 2.4) for (let xx = -w / 2; xx <= w / 2; xx += 2.4) list.push([x + xx, y, z, rnd() < 0.08 ? [0.9, 0.95, 0.4] : pal(['#141a14', '#101610', '#1a201a']), 2.5]); for (let k = 0; k < 10; k++) list.push([x + (rnd() - 0.5) * w * 1.6, h - 40 + rnd() * 3, z + 1, pal(['#8a7a3a', '#6a8a3a', '#a08a4a']), 2 + rnd() * 2]); }
+      // infected humans standing frozen
+      const infected = [[2.3, -1.4], [-3.8, -2.6], [4.4, 0.4]];
+      infected.forEach(([x, z]) => { for (let y = 0; y < 1.7; y += 0.12) { const w = y > 1.4 ? 0.2 : (y > 0.9 ? 0.32 : 0.18); for (let dx = -w; dx <= w; dx += 0.12) list.push([x + dx, y, z, y > 1.4 ? '#7a8a6a' : pal(['#3a3a30', '#2e2e26']), 0.12]); } });
+      A.island(list, { top: ['#3a3a2a', '#44402a', '#4a5030', '#38402a'], mid: ['#2a2820', '#24221a'], deep: ['#1c1a14', '#181610'] });
+      A.skull(list, 1.2, 0, 3.4); A.skull(list, -0.4, 0, 1.5);
+      const threads = [0, 1, 2].map(k => A.makeReach({ n: 100, points: [A.V3(E.x + (k - 1) * 3, E.y - 2, E.z + 6), A.V3(2 + k, 1 + k * 0.5, -22), A.V3(-1 + k * 0.6, 0.8, -8), A.V3(-2.2 + k * 0.2, 0.3, -0.8)], base: [0.45, 0.42, 0.3], glow: [1.4, 1.6, 0.5], r0: 0.22, r1: 0.06, target: () => A.local(k === 0 ? A.J.lAnkle : k === 1 ? A.J.lKnee : A.J.pelvis) }));
+      const veins = A.makeVeins(A.V3(-2.2, 0, -0.8));
+      const spores = A.makeParticles({ type: 'rise', n: 320, x: [-30, 30], y: [-12, 36], z: [-46, 6], cols: ['#d8f07a', '#b0d050', '#f0f0a0'], size: 0.13, sway: 0.8, fade: true });
+      A.buildFigure({ armor: ['#4a4a3a', '#3e3e30', '#56523e'], headCol: () => pal(['#1a1a18', '#24241e']), cape: ['#3a3424', '#2e2a1c'], coil: '#d0c890',
+        props: (seg, push) => { push(-0.06, 1.22, 0.75, [0.4, 1.4, 1.2]); push(0.12, 1.22, 0.75, [0.4, 1.4, 1.2]); push(0.03, 1.1, 0.78, '#3a3a34', 0.14); seg([0, 0.85, -0.05], [0, 1.1, -0.1], 0.18, '#5a4a30'); seg([-0.5, 0.62, 0.92], [-0.5, 0.35, 0.95], 0.02, '#3a3a34'); push(-0.5, 0.3, 0.95, [2.2, 1.6, 0.6], 0.14); for (let k = 0; k < 6; k++) push(0.55 + k * 0.03, 0.55 - k * 0.08, 0.7 + k * 0.07, [0.8, 1.4, 0.3], 0.08); } });
+      A.stat(list, true);
+      const iris = [0.9, 0.85, 0.2];
+      return (t, c) => {
+        const p = t / LOOP * TAU; twinkle(t);
+        glow.material.opacity = 0.24 + 0.15 * c.yank + 0.06 * Math.sin(p * 2);
+        cap.update(cell => { const n = cell.n, lit = 0.35 + 0.65 * Math.max(0, n[1] * 0.5 + n[2] * 0.6);
+          if (n[1] < -0.15) { const g = 0.5 + 0.5 * Math.sin(Math.atan2(n[2], n[0]) * 40 + p * 2); return [0.8 * g + 0.3 + c.yank, 1.1 * g + 0.3 + c.yank, 0.25]; }
+          const wr = Math.sin(n[0] * 22 + Math.sin(n[2] * 14) * 2) * Math.sin(n[2] * 20 + n[1] * 9); const k = 0.5 + 0.5 * wr;
+          return wr > 0.75 ? [0.95 * lit, 1.0 * lit, 0.35 * lit] : [(0.55 + k * 0.25) * lit, (0.42 + k * 0.15) * lit, (0.2 + k * 0.05) * lit]; }, 1 + RM * 0.02 * Math.sin(p * 2) + 0.03 * c.yank);
+        let si = 0; stalks.forEach((s, k) => { const pts = A.chain(s.x, s.y, s.a, s.n, s.small ? 0.28 : 0.7, q => RM * 0.45 * (q / s.n) * Math.sin(p * 2 + q * 0.3 + s.off)); pts.forEach(([x, y], q) => stalkM.put(si++, x, y, s.z, (s.small ? 0.16 : 0.45) * (1 - q / s.n * 0.4), q % 5 === 0 ? [0.8, 0.9, 0.35] : [0.72, 0.62, 0.42])); const [ex, ey] = pts[pts.length - 1];
+          const open = Math.max(c.lc, 0.15 * Math.max(0, Math.sin(p * 2 + s.off))) * A.lidAt(t, s.off);
+          bulbEyes.draw(k, ex, ey + 0.3, s.z + 0.3, open, 0, 0, iris, { pw: 0.12, lid: [0.55, 0.5, 0.25], skin: [0.75, 0.68, 0.4] }, s.small ? 0.5 : 1); });
+        stalkM.flush(); bulbEyes.flush();
+        threads.forEach(th => A.drawReach(th, t, c.yank)); A.drawVeins(veins, t, c.yank, [0.2, 0.3, 0.1], [1.0, 1.8, 0.4]); A.drawParticles(spores, t);
+      };
+    },
+  };
+
+  // =====================================================================
+  const T = THEMES[THEME];
+  scene.background = new THREE.Color(T.bg).convertSRGBToLinear();
+  post.uniforms.tint.value.set(...T.tint); post.uniforms.exposure.value = T.exposure;
+  scene.add(new THREE.HemisphereLight(new THREE.Color('#5a6aa0').convertSRGBToLinear(), new THREE.Color('#1a0c12').convertSRGBToLinear(), 0.6));
+  const sun = new THREE.DirectionalLight(new THREE.Color('#ffe0c8').convertSRGBToLinear(), 1.0); sun.position.set(0, 14, -30); scene.add(sun);
+  const redLight = new THREE.PointLight(new THREE.Color(T.light).convertSRGBToLinear(), 2.5, 12, 2); redLight.position.set(-2.2, 1.2, -0.8); scene.add(redLight);
+  const update = T.build(api);
+
+  $('sub').textContent = T.sub;
+  const menu = $('menu'); menu.innerHTML = ''; T.menu.forEach(([label, msg]) => { const li = document.createElement('li'); li.textContent = label; li.dataset.msg = msg; menu.appendChild(li); });
+
+  const CAM_T = V3(0, 8, -20);
+  let portrait = false;
+  function renderAt(t) {
+    const p = t / LOOP * TAU, yank = yankAt(t), lc = lookCam(t), sc = saccade(t);
+    poseFigure(t);
+    if (portrait) { camera.position.set(Math.sin(p) * 0.6, 5 + Math.sin(2 * p) * 0.15, 34); camera.lookAt(0, 9, -20); }
+    else { camera.position.set(Math.sin(p) * 0.9 + yank * 0.1 * Math.sin(p * 97), 6 + Math.sin(2 * p) * 0.15 + yank * 0.06 * Math.sin(p * 83), 30 + Math.cos(p) * 0.5); camera.lookAt(CAM_T); }
+    redLight.intensity = 2 + 2 * yank + 0.5 * Math.sin(p * 4);
+    const gaze = [-0.2 * (1 - lc) + sc[0] + 0.05 * Math.sin(p * 9) * yank, -0.16 * (1 - lc) + sc[1]];
+    update(t, { yank, lc, open: lidAt(t), gaze, pupil: 0.085 + 0.13 * yank + 0.015 * Math.sin(p * 4) });
+    post.uniforms.pulse.value = yank; post.uniforms.phase.value = p; post.uniforms.frameN.value = Math.floor(t * 24);
+    renderer.setRenderTarget(rt); renderer.render(scene, camera);
+    renderer.setRenderTarget(null); renderer.render(postScene, postCam);
+  }
+
+  const bufSize = new THREE.Vector2();
+  let fixed = null;
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    if (fixed) { renderer.setPixelRatio(1); renderer.setSize(fixed[0], fixed[1], false); camera.aspect = fixed[0] / fixed[1]; }
+    else { if (!r.width) return; renderer.setPixelRatio(1); renderer.setSize(Math.round(r.width / 2.1), Math.round(r.height / 2.1), false); camera.aspect = r.width / r.height; }
+    camera.fov = portrait ? 74 : 46; camera.updateProjectionMatrix();
+    renderer.getDrawingBufferSize(bufSize); rt.setSize(bufSize.x, bufSize.y); post.uniforms.res.value.copy(bufSize);
+  }
+  addEventListener('resize', resize);
+
+  // ---------- title-screen UI ----------
+  let state = 'press', sel = 0, toastT = null;
+  const items = [...menu.children];
+  items.forEach((li, i) => { li.onmouseenter = () => pick(i); li.onclick = e => { e.stopPropagation(); pick(i); choose(); }; });
+  function setState(s) {
+    state = s; $('ui').hidden = s === 'none'; $('press').hidden = s !== 'press'; menu.hidden = s !== 'menu';
+    ['stPress', 'stMenu', 'stNone'].forEach(id => $(id).setAttribute('aria-pressed', id === { press: 'stPress', menu: 'stMenu', none: 'stNone' }[s]));
+    if (s === 'menu') pick(sel);
+  }
+  function pick(i) { sel = (i + items.length) % items.length; items.forEach((li, k) => li.classList.toggle('on', k === sel)); }
+  function choose() { $('toast').textContent = items[sel].dataset.msg; $('toast').hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $('toast').hidden = true, 2600); }
+  $('screen').addEventListener('click', () => { if (state === 'press') setState('menu'); });
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;
+    if (e.key === 'r' || e.key === 'R') return setRec(!document.body.classList.contains('rec'));
+    if (e.key === 'Escape') return setRec(false);
+    if (e.code === 'Space' && state !== 'menu') { e.preventDefault(); return togglePlay(); }
+    if (state === 'press') return setState('menu');
+    if (state === 'menu') {
+      if (e.key === 'ArrowDown' || e.key === 's') { e.preventDefault(); pick(sel + 1); }
+      else if (e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); pick(sel - 1); }
+      else if (e.key === 'Enter' || e.code === 'Space') { e.preventDefault(); choose(); }
+      else if (e.key === 'Backspace') setState('press');
+    }
+  });
+  $('stPress').onclick = () => setState('press'); $('stMenu').onclick = () => setState('menu'); $('stNone').onclick = () => setState('none');
+  function setRec(on) { document.body.classList.toggle('rec', on); if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {}); requestAnimationFrame(resize); }
+  $('recBtn').onclick = () => setRec(true); $('exitRec').onclick = () => setRec(false);
+
+  let playing = true, t0 = performance.now(), held = 0;
+  function togglePlay() { playing = !playing; if (playing) t0 = performance.now() - held * 1000; $('playBtn').textContent = playing ? 'Pause' : 'Play'; }
+  $('playBtn').onclick = togglePlay;
+  let frame = 0;
+  function loop(now) {
+    const t = playing ? ((now - t0) / 1000) % LOOP : held;
+    held = t; renderAt(t);
+    if (frame++ % 10 === 0) $('clock').textContent = `loop ${t.toFixed(1)} / ${LOOP.toFixed(1)} s`;
+    requestAnimationFrame(loop);
+  }
+  // export hooks: fixed internal resolution (and a 9:16 framing) for rendering video/keyframes
+  window.SB = { LOOP, renderAt: t => { playing = false; held = t; renderAt(t); }, setState, setExport: (w, h, port) => { fixed = w ? [w, h] : null; portrait = !!port; resize(); } };
+  setState('press'); resize(); requestAnimationFrame(loop);
+})();
+</script>
