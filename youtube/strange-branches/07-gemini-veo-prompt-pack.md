@@ -122,3 +122,15 @@ Starting images: `strange-branches-anime-chained-9x16-start.png` (Shorts) or `�
 - The chains disappear → add "the chains stay attached the whole time".
 - It turns realistic → start the prompt with "Pixelated voxel art." and end it with "Keep the pixelated voxel look."
 - Nothing happens → shorten the action to one verb: "pulls against the chains", "lifts its head", "lunges".
+
+---
+
+## 8. Close-up start frames (Veo animates the detail instead of inventing it)
+
+**`strange-branches-anime-closeup-*-start.png`: the giant's head and chest** (use it for the WRATH beat)
+> Slow push-in. Pixelated voxel art. Close-up of a colossal pale giant's head and chest, crucified, with a twin-pronged red spear through its chest and blood running down its ribs. Its head is a smooth, faceless dome of purple flesh fused to its skull, with no mouth and no nose, seven red eyes in a downward triangle, and a golden halo behind it. The seven eyes slowly narrow and glare into the camera with hatred while its shoulders strain against its shackles. Keep the pixelated voxel look. Sound: a hateful exhale, a swelling choir.
+
+**`strange-branches-main-knight-*-start.png`: the wounded knight before the Eye** (use it for the STRUGGLE beat, before the Eye clips)
+> Static low camera. Pixelated voxel art. Seen from behind, a wounded armoured knight kneels on a stone island, while a colossal floating eye creature looms above between ruined red pillars. The knight tries to stand, leaning on a sword, then collapses back onto one knee, shaking. The great eye stays still and watches. Keep the pixelated voxel look. Sound: armour scraping on stone, a strained breath, a deep drone.
+
+**Suggested Short edit:** knight struggle → Eye "Drift" → Eye "Notice" → crash zoom. Or, for Ascension: Strain → close-up Wrath → Lunge.

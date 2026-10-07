@@ -702,6 +702,7 @@ body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-vi
     poseFigure(t);
     if (portrait) { camera.position.set(Math.sin(p) * 0.6, 5 + Math.sin(2 * p) * 0.15, 34); camera.lookAt(0, 9, -20); }
     else { camera.position.set(Math.sin(p) * 0.9 + yank * 0.1 * Math.sin(p * 97), 6 + Math.sin(2 * p) * 0.15 + yank * 0.06 * Math.sin(p * 83), 30 + Math.cos(p) * 0.5); camera.lookAt(CAM_T); }
+    if (window.CAMO) { camera.position.set(...CAMO.pos); camera.lookAt(...CAMO.look); camera.fov = CAMO.fov; camera.updateProjectionMatrix(); }
     redLight.intensity = 2 + 2 * yank + 0.5 * Math.sin(p * 4);
     const gaze = [-0.2 * (1 - lc) + sc[0] + 0.05 * Math.sin(p * 9) * yank, -0.16 * (1 - lc) + sc[1]];
     update(t, { yank, lc, open: lidAt(t), gaze, pupil: 0.085 + 0.13 * yank + 0.015 * Math.sin(p * 4) });
