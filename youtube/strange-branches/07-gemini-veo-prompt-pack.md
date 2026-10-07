@@ -87,3 +87,38 @@ Then use the improved prompt in step A.
 3. Add the channel title as text in the top 15% of the frame and a hook line in the middle (e.g. *"What if the Bible's angels were real biology?"*). Keep the bottom 20% clear, because Shorts UI covers it.
 4. Export at 1080×1920, 30 fps, H.264.
 5. To make it loop, end on a frame close to your first frame (a slow push-in ending on the eye works well).
+
+---
+
+## 6. Why the first prompts failed, and the rules that fix it
+
+What went wrong with the long prompts (tested on the Ascension frame):
+1. **Too many events in one clip.** Veo picks the one or two most dramatic beats and skips the rest. The stare was in both prompts, so it went straight to the stare.
+2. **Asking for objects that aren't in the start frame** (the chains). Veo invents its own, or ignores them. **Fix: the object has to be visible in the start image.** Use the `anime-chained` frames.
+3. **"Avoid: …" lists.** Gemini has no negative-prompt field, so naming a thing ("breaking free", "staring") can pull the model *towards* it. Say what should happen instead: "its head stays bowed".
+4. **Too long.** Prompts over ~100 words get loosely summarised. Keep them to 40–80 words.
+
+**The formula, in this order:** `[Camera]` → `[What the image shows, in one line]` → `[ONE action]` → `[Where the clip ends]` → `[Style, in one line]` → `[Sound]`
+
+**One clip = one beat.** To build a sequence, chain clips: when clip 1 is done, pause on its last frame, take a screenshot, and use it as clip 2's starting image. In **Google Flow** (labs.google/flow, included with Gemini Pro) use **Extend** instead; it continues from the last frame automatically.
+
+---
+
+## 7. ASCENSION: The Shackled Giant (3-beat sequence)
+
+Starting images: `strange-branches-anime-chained-9x16-start.png` (Shorts) or `…-16x9-start.png`.
+
+**Clip 1: STRAIN** (start image: the chained frame)
+> Static camera, slow push-in. A pixelated voxel-art giant hangs crucified in space before a red moon, its wrists and neck locked in iron shackles with heavy chains stretching out of frame. The giant's head stays bowed and it pulls against the chains with all its strength: the chains snap taut and tremble, its arms shake, and blood drips from its wounds and shackles. It cannot move. Retro voxel PlayStation-horror style, dithered, film grain. Sound: groaning iron chains, a low pained growl.
+
+**Clip 2: WRATH** (start image: the last frame of clip 1)
+> Slow push-in toward the giant's purple mask. The chained, wounded voxel giant slowly lifts its bowed head and looks straight down into the camera. The red eyes on its mask narrow into a hateful glare and stay locked on the viewer. Its body stays still; only the head moves. Retro voxel horror style, dithered, film grain. Sound: a deep hateful exhale, a choir swelling.
+
+**Clip 3: LUNGE** (start image: the last frame of clip 2. This is the 2–3 s hit; generate 4 s and trim)
+> Static camera. The chained voxel giant lunges forward at the camera, but the iron chains on its wrists and neck yank it back hard at full stretch. Sparks and blood spray from the shackles. The screen shakes once with a red glitch. Retro voxel horror style. Sound: a chain crack and a heavy bass impact.
+
+**If a clip goes wrong:**
+- It stares too early → keep "head stays bowed" and remove every word about eyes or looking.
+- The chains disappear → add "the chains stay attached the whole time".
+- It turns realistic → start the prompt with "Pixelated voxel art." and end it with "Keep the pixelated voxel look."
+- Nothing happens → shorten the action to one verb: "pulls against the chains", "lifts its head", "lunges".
