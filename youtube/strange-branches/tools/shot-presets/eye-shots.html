@@ -1,0 +1,758 @@
+<title>Strange Branches Title Screen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<style>
+/* Layout: one 16:9 "screen" (the game's title screen) with a slim control bar under it. Single dark look by design. */
+:root {
+  --void: #05060a;      /* page + space */
+  --panel: #0d1016;     /* control bar */
+  --line: #232833;
+  --bone: #e9e2cf;      /* title text */
+  --dim: #8a8f9c;
+  --ember: #ff7a3d;     /* fire, eye */
+  --gold: #e6b84a;
+  --rig: #6fe3ff;       /* suit lights */
+  --serif: "Cinzel", "Trajan Pro", Georgia, serif;
+  --serif2: "Cormorant Garamond", Georgia, serif;
+  --pix: "Silkscreen", "Courier New", monospace;
+  --term: "VT323", "Courier New", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--void); color: var(--bone); font: 14px system-ui, sans-serif; }
+.wrap { max-width: 1400px; margin: 0 auto; padding-block: 16px 24px; padding-inline: 16px; display: grid; gap: 12px; }
+
+.screen { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #000; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; user-select: none; }
+.screen canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+body.voxel .screen canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* overlays */
+.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(0,0,0,.75) 100%); }
+.scan { position: absolute; inset: 0; pointer-events: none; display: none; background: repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+body.voxel .scan { display: block; }
+
+.ui { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto auto; justify-items: center; padding: 3% 4% 2.5%; pointer-events: none; text-align: center; background: linear-gradient(to bottom, rgba(3,4,8,.7) 0%, transparent 22%, transparent 74%, rgba(3,4,8,.7) 100%); }
+.ui[hidden] { display: none; }
+.titleblock { grid-row: 1; display: grid; justify-items: center; gap: .4em; }
+.title { font: 700 clamp(18px, 4.2vw, 64px) var(--serif); letter-spacing: .14em; line-height: 1; color: var(--bone); text-shadow: 0 0 .6em rgba(255,122,61,.25), 0 2px 0 rgba(0,0,0,.6); margin-right: -.14em; }
+.rule { width: clamp(120px, 34vw, 520px); height: 1px; background: linear-gradient(90deg, transparent, rgba(233,226,207,.7), transparent); }
+.sub { font: italic 500 clamp(11px, 1.6vw, 24px) var(--serif2); letter-spacing: .12em; color: var(--dim); }
+body.voxel .title { font: 700 clamp(16px, 3.6vw, 54px) var(--pix); letter-spacing: .06em; text-shadow: .08em .08em 0 #7a2a10, 0 0 0 transparent; color: #f3e6c4; margin-right: -.06em; }
+body.voxel .sub { font: 400 clamp(14px, 2vw, 30px) var(--term); font-style: normal; letter-spacing: .1em; color: #b9a98a; }
+body.voxel .rule { background: repeating-linear-gradient(90deg, #b9a98a 0 6px, transparent 6px 10px); height: 3px; }
+
+.press { font: 500 clamp(11px, 1.5vw, 22px) var(--serif2); letter-spacing: .35em; text-transform: uppercase; color: var(--bone); animation: breathe 3s ease-in-out infinite; grid-row: 3; }
+body.voxel .press { font: 400 clamp(14px, 2vw, 30px) var(--term); letter-spacing: .25em; animation: blink 1.2s steps(1) infinite; }
+@keyframes breathe { 0%,100% { opacity: .25 } 50% { opacity: .95 } }
+@keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+
+.menu { grid-row: 2 / 4; align-self: end; justify-self: end; text-align: right; list-style: none; margin: 0 2% 0 0; padding: 0; display: grid; gap: .15em; pointer-events: auto; }
+.menu[hidden] { display: none; }
+.menu li { font: 500 clamp(11px, 1.45vw, 22px) var(--serif2); letter-spacing: .2em; text-transform: uppercase; color: var(--dim); cursor: pointer; position: relative; padding: .1em 1.4em; transition: color .2s; }
+.menu li.on { color: var(--bone); }
+.menu li.on::before, .menu li.on::after { content: "◆"; position: absolute; top: 50%; transform: translateY(-50%); font-size: .55em; color: var(--ember); }
+.menu li.on::before { left: 0; } .menu li.on::after { right: 0; }
+body.voxel .menu li { font: 400 clamp(13px, 1.8vw, 28px) var(--term); letter-spacing: .15em; transition: none; }
+body.voxel .menu li.on::before { content: "▶"; } body.voxel .menu li.on::after { content: ""; }
+
+.foot { grid-row: 4; margin-top: .6em; font: 500 clamp(8px, .9vw, 13px) var(--serif2); letter-spacing: .2em; color: rgba(233,226,207,.35); text-transform: uppercase; }
+body.voxel .foot { grid-row: 4; margin-top: .6em; font: 400 clamp(10px, 1.1vw, 16px) var(--term); }
+.toast { position: absolute; left: 50%; top: 20%; transform: translateX(-50%); font: italic 500 clamp(11px, 1.4vw, 20px) var(--serif2); color: var(--bone); background: rgba(5,6,10,.7); border-top: 1px solid rgba(233,226,207,.3); border-bottom: 1px solid rgba(233,226,207,.3); padding: .5em 2em; white-space: nowrap; pointer-events: none; }
+.toast[hidden] { display: none; }
+body.voxel .toast { font: 400 clamp(14px, 1.8vw, 26px) var(--term); font-style: normal; border: 2px solid #b9a98a; }
+
+/* control bar */
+.bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; }
+.grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.lab { font: 600 11px system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-right: 4px; }
+.bar button { font: 500 13px system-ui, sans-serif; color: var(--bone); background: transparent; border: 1px solid var(--line); border-radius: 3px; padding: 6px 10px; cursor: pointer; }
+.bar button:hover { border-color: var(--dim); }
+.bar button[aria-pressed="true"] { background: var(--bone); color: var(--void); border-color: var(--bone); }
+.bar button:focus-visible, .menu li:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.clock { margin-left: auto; font: 12px ui-monospace, Menlo, monospace; color: var(--dim); font-variant-numeric: tabular-nums; }
+.note { color: var(--dim); font-size: 12.5px; line-height: 1.5; margin: 0; max-width: 75ch; }
+
+body.rec .wrap { max-width: none; padding: 0; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; }
+body.rec .bar, body.rec .note { display: none; }
+body.rec .screen { width: min(100vw, 177.78vh); border: 0; border-radius: 0; }
+.exit { position: fixed; right: 12px; bottom: 12px; display: none; font: 12px ui-monospace, monospace; color: var(--dim); background: rgba(0,0,0,.5); border: 1px solid var(--line); border-radius: 3px; padding: 6px 10px; cursor: pointer; opacity: 0; }
+body.rec .exit { display: block; } body.rec .exit:hover, body.rec .exit:focus-visible { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .press { animation: none; opacity: .8; } }
+</style>
+
+<div class="wrap">
+  <div class="screen" id="screen" tabindex="0" aria-label="Animated game title screen. Press any key or click to open the menu.">
+    <canvas id="cv"></canvas>
+    <div class="vignette"></div>
+    <div class="scan"></div>
+    <div class="ui" id="ui">
+      <div class="titleblock">
+        <div class="title">STRANGE BRANCHES</div>
+        <div class="rule"></div>
+        <div class="sub" id="sub">Every branch is real somewhere</div>
+      </div>
+      <div class="press" id="press">Press any button</div>
+      <ul class="menu" id="menu" hidden>
+        <li data-msg="There is no game. Yet. The branch is still growing.">New Branch</li>
+        <li data-msg="Your save file was eaten by Gerald.">Continue</li>
+        <li data-msg="Bestiary locked. Gain more Insight.">Bestiary</li>
+        <li data-msg="Difficulty: Souls. There is only one setting.">Options</li>
+        <li data-msg="You cannot quit. You have seen the eye.">Quit</li>
+      </ul>
+      <div class="foot">© Strange Branches · ver. 0.66.M</div>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+  </div>
+
+  <div class="bar" role="toolbar" aria-label="Title screen controls">
+    <div class="grp"><span class="lab">Style</span>
+      <button id="sVox" aria-pressed="true">Voxel retro</button>
+      <button id="sMod" aria-pressed="false">Modern</button></div>
+    <div class="grp"><span class="lab">Screen</span>
+      <button id="stPress" aria-pressed="true">Press any button</button>
+      <button id="stMenu" aria-pressed="false">Menu</button>
+      <button id="stNone" aria-pressed="false">No text</button></div>
+    <div class="grp">
+      <button id="playBtn">Pause</button>
+      <button id="recBtn" title="Fullscreen 16:9 for screen recording (R)">Recording view</button></div>
+    <div class="clock" id="clock">loop 0.0 / 12.0 s</div>
+  </div>
+  <p class="note">The animation repeats seamlessly every 12 seconds, so a screen recording of any 12-second stretch loops perfectly. Click the screen or press any key to open the menu; use arrow keys and Enter to pick an item. Keys: V switch style, R recording view, Space pause.</p>
+</div>
+<button class="exit" id="exitRec">Exit recording view (Esc)</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const LOOP = 12, TAU = Math.PI * 2;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cv = $('cv');
+  const fail = msg => $('screen').insertAdjacentHTML('beforeend', `<p style="position:absolute;inset:auto 0 45%;text-align:center;color:#8a8f9c">${msg}</p>`);
+  if (!window.THREE) return fail('The 3D engine did not load. Reload the page.');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false, preserveDrawingBuffer: true }); }
+  catch (e) { return fail('This browser could not start WebGL.'); }
+  // Tone mapping, gamma, dithering and glitches all happen in our own post pass.
+  renderer.toneMapping = THREE.NoToneMapping;
+  renderer.outputEncoding = THREE.LinearEncoding;
+
+  const L = c => new THREE.Color(c).convertSRGBToLinear();
+  const scene = new THREE.Scene();
+  scene.background = L('#04040a');
+  const camera = new THREE.PerspectiveCamera(46, 16 / 9, 0.1, 600);
+  const CAM_T = new THREE.Vector3(0, 8, -20);
+
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const frac = x => x - Math.floor(x);
+  const MOON = new THREE.Vector3(0, 13, -40), MR = 8;
+  const FIG = new THREE.Vector3(-1.9, 0, 2.2);   // the wanderer
+
+  // ---------- timing curves (all periodic in LOOP, so the loop is seamless) ----------
+  const YANKS = [0.31, 0.78];
+  function yankAt(t) { const f = frac(t / LOOP); let y = 0; for (const c of YANKS) { const d = f - c; if (d > -0.01 && d < 0.09) y = Math.max(y, d < 0 ? (d + 0.01) / 0.01 : Math.exp(-d * 45)); } return reduced ? 0 : y; }
+  function lidAt(t, off) { const f = frac(t / LOOP + (off || 0)); let o = 1; for (const c of [0.12, 0.55]) { const d = Math.abs(f - c); if (d < 0.022) o = Math.min(o, d / 0.022); } return reduced ? 1 : o; }
+  function lookCam(t) { const f = frac(t / LOOP); const s = x => Math.max(0, Math.min(1, x)); return s((f - 0.58) / 0.04) * s((0.93 - f) / 0.04); } // all eyes snap to the viewer
+  function irisRGB(t, k) { // colour-cycling iris: ember → magenta → gold
+    const p = t / LOOP * TAU + (k || 0);
+    const c = new THREE.Color().setHSL(frac(0.04 + 0.06 * Math.sin(p) + 0.04 * Math.sin(2 * p + 1)), 1, 0.52);
+    return [c.r, c.g, c.b];
+  }
+
+  // darting glances: 8 fixation points per loop with fast jumps between them
+  const SAC = Array.from({ length: 8 }, () => [(rnd() - 0.5) * 0.14, (rnd() - 0.5) * 0.08]);
+  function saccade(t) { if (reduced) return [0, 0]; const f = frac(t / LOOP) * 8, i = Math.floor(f), k = Math.min(1, (f - i) / 0.05), a = SAC[(i + 7) % 8], b = SAC[i]; return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; }
+
+  // ---------- eye pattern (shared by voxel eyes; mirrored in GLSL) ----------
+  // u,v in eye space (-1..1). Returns rgb, or null for skin.
+  function eyePix(u, v, open, gx, gy, round, iris, seedv, pw) {
+    pw = pw || 0.085;
+    const half = round ? 0.95 * open * Math.sqrt(Math.max(0, 1 - u * u)) : 0.58 * open * (1 - u * u);
+    if (Math.abs(u) >= 1 || Math.abs(v) >= half) {
+      if (Math.abs(u) < 1.1 && Math.abs(v) < half + 0.12 && open > 0.04) return [0.42, 0.04, 0.05]; // raw red lid rim
+      return null;
+    }
+    const du = u - gx, dv = v - gy, r = Math.hypot(du, dv), a = Math.atan2(dv, du);
+    if ((du / pw) ** 2 + (dv / 0.36) ** 2 < 1) return [0.01, 0, 0.01];                       // slit pupil
+    if (r < 0.42) { const k = r / 0.42, st = 0.72 + 0.28 * Math.sin(a * 14 + seedv); return [iris[0] * st * (1.25 - k * 0.5) * 1.8, iris[1] * st * (1.2 - k * 0.6) * 1.8 + 0.15, iris[2] * st * (1.1 - k * 0.4) * 1.8]; }
+    if (r < 0.48) return [0.12, 0.02, 0.03];                                                    // limbal ring
+    const vein = r > 0.55 && Math.abs(Math.sin(a * 7 + r * 11 + seedv)) < 0.1;
+    return vein ? [0.62, 0.08, 0.08] : [0.92, 0.86, 0.70 - Math.abs(v) * 0.25];               // veined sclera
+  }
+
+  // ---------- entity skeleton (shared by both styles) ----------
+  // 1. hanging tendrils
+  const SEG = [];
+  (function () {
+    function add(parent, x, y, ang, len, depth) {
+      const s = { parent, ang, len, depth, ph: 1 + Math.floor(rnd() * 3), off: rnd() * TAU, x0: x, y0: y };
+      SEG.push(s);
+      if (depth < 3) { const n = depth < 2 ? 2 : (rnd() < 0.6 ? 2 : 1); for (let i = 0; i < n; i++) add(s, 0, 0, (i ? 1 : -1) * (0.3 + rnd() * 0.4), len * (0.66 + rnd() * 0.12), depth + 1); }
+    }
+    for (let i = 0; i < 7; i++) { const a = Math.PI * (1.18 + 0.64 * i / 6); add(null, Math.cos(a) * MR * 0.95, Math.sin(a) * MR * 0.95, a, 4 + rnd() * 2.5, 0); }
+  })();
+  const LEAVES = SEG.filter(s => !SEG.some(c => c.parent === s));
+  // 2. wings: 3 per side, 7 feathers each, every feather ends in an eye
+  const FEATHERS = [];
+  for (const side of [-1, 1]) for (let w = 0; w < 3; w++) for (let j = 0; j < 7; j++) {
+    const base = (side > 0 ? 0 : Math.PI) + side * (0.55 - w * 0.5);
+    FEATHERS.push({ side, w, j, base, spread: side * (j - 3) * 0.07, len: 7 + (3 - Math.abs(j - 3)) * 1.4 + (w === 1 ? 2 : 0), off: rnd() * TAU });
+  }
+  // 3. two crossing wheels (ophanim-style), studded with eyes
+  const RINGS = [{ R: 12.5, N: 12, tilt: [1.25, 0, 0.35], dir: 1 }, { R: 14.5, N: 16, tilt: [0.25, 1.2, -0.3], dir: -1 }];
+  // 4. crown of bone spikes
+  const SPIKES = Array.from({ length: 11 }, (_, i) => ({ a: Math.PI * (0.18 + 0.64 * i / 10), len: 3 + (i % 2 ? 1.5 : 3.5) + rnd() }));
+  // 5. ground veins spreading from where the reaching tendril touches down
+  const TOUCH = new THREE.Vector3(-2.2, 0, -0.8);
+  const VEINS = [];
+  for (let b = 0; b < 9; b++) { let x = TOUCH.x, z = TOUCH.z, a = rnd() * TAU; const pts = []; for (let k = 0; k < 22; k++) { a += (rnd() - 0.5) * 0.9; x += Math.cos(a) * 0.26; z += Math.sin(a) * 0.26; if (Math.hypot(x, z) > 5.8) break; pts.push([x, z, k]); } VEINS.push(pts); }
+  const VEINPTS = VEINS.flat();
+
+  function poseTendrils(t) {
+    const p = t / LOOP * TAU;
+    for (const s of SEG) {
+      const sway = (reduced ? 0 : 1) * (0.06 + s.depth * 0.06) * Math.sin(p * s.ph + s.off);
+      if (!s.parent) { s.a = s.ang + sway; s.sx = s.x0; s.sy = s.y0; } else { s.a = s.parent.a + s.ang + sway; s.sx = s.parent.ex; s.sy = s.parent.ey; }
+      s.ex = s.sx + Math.cos(s.a) * s.len; s.ey = s.sy + Math.sin(s.a) * s.len;
+    }
+  }
+  function featherAt(f, t) { // returns root, tip (moon-plane coords) for a feather
+    const p = t / LOOP * TAU, flap = reduced ? 0 : 0.09 * Math.sin(p + f.w * 0.7) + 0.02 * Math.sin(3 * p + f.off);
+    const a = f.base + f.spread + f.side * flap;
+    const rx = Math.cos(f.base) * MR * 0.9, ry = Math.sin(f.base) * MR * 0.9;
+    return [rx, ry, rx + Math.cos(a) * f.len, ry + Math.sin(a) * f.len];
+  }
+  const ringQ = RINGS.map(r => new THREE.Quaternion().setFromEuler(new THREE.Euler(...r.tilt)));
+  function ringPoint(ri, ang, t) { // world position of a point on ring ri
+    const r = RINGS[ri], spin = (reduced ? 0 : 1) * r.dir * (t / LOOP) * TAU / r.N * 2; // two eye-steps per loop: seamless
+    const v = new THREE.Vector3(Math.cos(ang + spin) * r.R, Math.sin(ang + spin) * r.R, 0).applyQuaternion(ringQ[ri]);
+    return v.add(MOON);
+  }
+
+  // reaching tendril: from the entity down to the wanderer's ankle
+  const reachCtrl = [new THREE.Vector3(1.5, MOON.y - MR * 0.85, MOON.z + 3), new THREE.Vector3(2.5, 2, -20), new THREE.Vector3(-0.5, 0.9, -8), new THREE.Vector3(TOUCH.x, 0.35, TOUCH.z), new THREE.Vector3(-2.5, 0.25, 2.2), new THREE.Vector3()];
+  const reachCurve = new THREE.CatmullRomCurve3(reachCtrl, false, 'centripetal');
+  const REACH_N = 140;
+
+  // ---------- figure pose (local space: +z faces camera, entity is behind at -z) ----------
+  // Knocked to one knee, bleeding, clinging to the planted sword while being dragged backwards by the ankle.
+  const J = {
+    pelvis: [0, 0.55, 0], chest: [0, 0.95, 0.28], neck: [0, 1.15, 0.42], head: [0.04, 1.2, 0.58],
+    lKnee: [-0.2, 0.12, -0.05], lAnkle: [-0.2, 0.14, -0.55], lToe: [-0.2, 0.05, -0.7],
+    rKnee: [0.22, 0.48, 0.32], rAnkle: [0.24, 0.06, 0.3],
+    lSh: [-0.3, 1.02, 0.3], lElb: [-0.48, 0.72, 0.62], lHand: [-0.5, 0.62, 0.92],   // gripping sword
+    rSh: [0.3, 1.02, 0.3], rElb: [0.55, 0.6, 0.7], rHand: [0.72, 0.06, 1.12],      // clawing the ground
+  };
+  const SWORD = { base: [-0.5, 0, 1.0], top: [-0.5, 0.95, 0.92] };
+  const figGroup = new THREE.Group(); scene.add(figGroup);
+  function poseFigure(t) {
+    const p = t / LOOP * TAU, S = window.SHOT, y = S ? S.figYank : yankAt(t);
+    const tremble = reduced ? 0 : (S ? 1 + 3 * S.figShake : 1);
+    figGroup.position.set(FIG.x + tremble * 0.012 * Math.sin(p * 53), S ? S.figUp : 0, FIG.z - 0.32 * y + tremble * 0.008 * Math.sin(p * 41));
+    figGroup.rotation.set(-0.12 * y + (S ? S.figLean : 0) + tremble * 0.01 * Math.sin(p * 37), 0.35, tremble * 0.015 * Math.sin(p * 47));
+    figGroup.updateMatrixWorld(true);
+  }
+  const ankleWorld = () => new THREE.Vector3(...J.lAnkle).applyMatrix4(figGroup.matrixWorld);
+
+  // ---------- post-processing (dither, colour split, warp, grain) ----------
+  const isGL2 = renderer.capabilities.isWebGL2;
+  const rt = new THREE.WebGLRenderTarget(4, 4, { type: isGL2 ? THREE.HalfFloatType : THREE.UnsignedByteType, depthBuffer: true });
+  const post = new THREE.ShaderMaterial({
+    uniforms: { tDiffuse: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, phase: { value: 0 }, frameN: { value: 0 }, voxel: { value: 0 }, pulse: { value: 0 }, exposure: { value: 1.1 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 res; uniform float phase, frameN, voxel, pulse, exposure; varying vec2 vUv;
+      vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0); }
+      float bayer2(vec2 a){ a = floor(a); return fract(dot(a, vec2(0.5, a.y*0.75))); }
+      float bayer4(vec2 a){ return bayer2(0.5*a)*0.25 + bayer2(a); }
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+      void main(){
+        vec2 uv = vUv;
+        float wob = (0.0009 + pulse*0.006) * (1.0 + voxel);
+        uv.x += sin(uv.y*26.0 + phase*3.0) * wob + sin(uv.y*91.0 - phase*5.0) * wob*0.4;
+        vec2 d = uv - 0.5;
+        float ca = (0.0018 + pulse*0.012) * (1.0 + voxel*0.8);
+        vec3 col;
+        col.r = texture2D(tDiffuse, uv + d*ca*3.0).r;
+        col.g = texture2D(tDiffuse, uv).g;
+        col.b = texture2D(tDiffuse, uv - d*ca*3.0).b;
+        col = aces(col * exposure * (1.0 + pulse*0.35));
+        col = pow(col, vec3(1.0/2.2));
+        col += (hash(floor(uv*res) + frameN*1.37) - 0.5) * (0.035 + voxel*0.03);
+        float vig = smoothstep(1.15, 0.35, length(d*vec2(1.0, 0.8))*1.55);
+        col *= mix(0.45, 1.0, vig);
+        if (voxel > 0.5) {
+          // posterise with an ordered dither, and push shadows toward bruised purple
+          float lv = 6.0;
+          col = mix(col, col*vec3(0.85,0.75,1.1), (1.0 - dot(col, vec3(0.33)))*0.35);
+          col = floor(col*lv + bayer4(gl_FragCoord.xy) ) / lv;
+        }
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+    depthTest: false, depthWrite: false,
+  });
+  const postScene = new THREE.Scene(), postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
+
+  // ---------- shared background ----------
+  function glowTex(stops, rays) {
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const g = c.getContext('2d'); const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    stops.forEach(([o, col]) => gr.addColorStop(o, col)); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+    if (rays) { g.globalCompositeOperation = 'destination-in'; g.translate(128, 128); for (let i = 0; i < rays; i++) { g.rotate(TAU / rays); g.beginPath(); g.moveTo(0, 0); g.lineTo(140, -6 - (i % 3) * 3); g.lineTo(140, 6 + (i % 3) * 3); g.closePath(); g.fill(); } }
+    return new THREE.CanvasTexture(c);
+  }
+  const softTex = glowTex([[0, 'rgba(255,255,255,1)'], [0.25, 'rgba(255,255,255,.55)'], [1, 'rgba(255,255,255,0)']]);
+  const rayTex = glowTex([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,.35)'], [1, 'rgba(255,255,255,0)']], 28);
+  const sprite = (col, size, opacity, tex, normal) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex || softTex, color: L(col), transparent: true, opacity, blending: normal ? THREE.NormalBlending : THREE.AdditiveBlending, depthWrite: false })); s.scale.setScalar(size); return s; };
+
+  const bg = new THREE.Group(); scene.add(bg);
+  (function () {
+    const n = 1500, pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { const u = rnd() * 2 - 1, th = rnd() * TAU, r = 180; pos.set([Math.sqrt(1 - u * u) * Math.cos(th) * r, Math.abs(u) * r * 0.9 + 5, -Math.abs(Math.sqrt(1 - u * u) * Math.sin(th) * r) - 20], i * 3); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    bg.add(new THREE.Points(g, new THREE.PointsMaterial({ color: L('#cfd6ff'), size: 1.5, sizeAttenuation: false })));
+    for (const [c, s, x, y, z, o] of [['#2a0f3a', 140, -45, 40, -150, 0.8], ['#0f3036', 120, 55, 30, -160, 0.6], ['#4a0a12', 90, 0, 18, -110, 0.55]]) { const sp = sprite(c, s, o, null, true); sp.position.set(x, y, z); bg.add(sp); }
+  })();
+  const rays = sprite('#ffb27a', MR * 6.5, 0.22, rayTex); rays.position.copy(MOON).add(new THREE.Vector3(0, 0, -3)); scene.add(rays);
+  const rays2 = sprite('#b04aff', MR * 9, 0.12, rayTex); rays2.position.copy(MOON).add(new THREE.Vector3(0, 0, -5)); scene.add(rays2);
+  const halo = sprite('#ff4a1a', MR * 3.6, 0.45); halo.position.copy(MOON).add(new THREE.Vector3(0, 0, -1.5)); scene.add(halo);
+
+  const hemi = new THREE.HemisphereLight(L('#5a6aa0'), L('#1a0c12'), 0.55); scene.add(hemi);
+  const moonLight = new THREE.DirectionalLight(L('#ffd9c0'), 1.0); moonLight.position.set(0, 14, -30); scene.add(moonLight);
+  const redLight = new THREE.PointLight(L('#ff2a1a'), 3, 12, 2); redLight.position.set(TOUCH.x, 1.2, TOUCH.z); scene.add(redLight);
+  const fireLight = new THREE.PointLight(L('#ff8a40'), 1.2, 6, 2); fireLight.position.set(2.6, 1, 2.4); scene.add(fireLight);
+
+  // ======================================================================
+  // MODERN STYLE
+  // ======================================================================
+  const modern = new THREE.Group(); scene.add(modern);
+  const M = {};
+  const EYE_GLSL = `
+    vec3 eyeCol(vec2 uv, float open, vec2 gz, float rnd, vec3 iris, vec3 skin, out float isEye){
+      float half_ = rnd > 0.5 ? 0.95*open*sqrt(max(0.0, 1.0-uv.x*uv.x)) : 0.58*open*(1.0-uv.x*uv.x);
+      isEye = 0.0;
+      if (abs(uv.x) >= 1.0 || abs(uv.y) >= half_) {
+        if (abs(uv.x) < 1.1 && abs(uv.y) < half_ + 0.12 && open > 0.04) { isEye = 1.0; return vec3(0.42,0.04,0.05); }
+        return skin;
+      }
+      isEye = 1.0;
+      vec2 d = uv - gz; float r = length(d); float a = atan(d.y, d.x);
+      if (pow(d.x/0.085,2.0) + pow(d.y/0.36,2.0) < 1.0) return vec3(0.01,0.0,0.01);
+      if (r < 0.42) { float k = r/0.42; float st = 0.72 + 0.28*sin(a*14.0); return iris*st*vec3(1.25-k*0.5, 1.2-k*0.6, 1.1-k*0.4)*2.2; }
+      if (r < 0.48) return vec3(0.12,0.02,0.03);
+      if (r > 0.55 && abs(sin(a*7.0 + r*11.0)) < 0.1) return vec3(0.62,0.08,0.08);
+      return vec3(0.92,0.86,0.70-abs(uv.y)*0.25);
+    }
+    float h3(vec3 p){ return fract(sin(dot(p, vec3(12.9898,78.233,37.719)))*43758.5453); }
+    float n3(vec3 p){ vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+      return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),
+                 mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z); }`;
+  (function buildModern() {
+    // the great eye
+    M.moonMat = new THREE.ShaderMaterial({
+      uniforms: { gaze: { value: new THREE.Vector2() }, open: { value: 1 }, iris: { value: new THREE.Vector3(1, 0.4, 0.1) } },
+      vertexShader: `varying vec3 vN; varying vec3 vP; void main(){ vN = normalize(normal); vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+      fragmentShader: `uniform vec2 gaze; uniform float open; uniform vec3 iris; varying vec3 vN; varying vec3 vP; ${EYE_GLSL}
+        void main(){
+          vec3 n = normalize(vN);
+          float nz = n3(vP*0.7)*0.6 + n3(vP*2.1)*0.4;
+          vec3 skin = vec3(0.70,0.62,0.58) - nz*0.25;
+          float vv = abs(sin(vP.x*2.3 + vP.y*1.7 + nz*6.0));
+          if (vv < 0.07 && n.z > -0.2) skin = mix(skin, vec3(0.45,0.08,0.1), 0.8);
+          skin *= 0.35 + 0.65*clamp(n.y*0.3 + n.z*0.9, 0.0, 1.0);
+          float isEye; vec3 col = skin;
+          if (n.z > 0.1) col = eyeCol(n.xy/0.62, open, gaze, 0.0, iris, skin, isEye);
+          col += vec3(1.0,0.3,0.15) * pow(1.0 - max(n.z,0.0), 3.0) * 0.5;
+          gl_FragColor = vec4(col, 1.0);
+        }`,
+    });
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(MR, 128, 96), M.moonMat); moon.position.copy(MOON); modern.add(moon);
+
+    // small eyes (instanced spheres; local +z faces their target)
+    const N_EYES = FEATHERS.length + RINGS.reduce((a, r) => a + r.N, 0) + 4;
+    const eg = new THREE.SphereGeometry(1, 20, 14);
+    M.eyeOpen = new THREE.InstancedBufferAttribute(new Float32Array(N_EYES), 1); eg.setAttribute('aOpen', M.eyeOpen);
+    M.eyeMat = new THREE.ShaderMaterial({
+      uniforms: { iris: { value: new THREE.Vector3(1, 0.4, 0.1) } },
+      vertexShader: `attribute float aOpen; varying vec3 vN; varying float vOpen; void main(){ vN = normal; vOpen = aOpen; gl_Position = projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.0); }`,
+      fragmentShader: `uniform vec3 iris; varying vec3 vN; varying float vOpen; ${EYE_GLSL}
+        void main(){ vec3 n = normalize(vN); vec3 skin = vec3(0.35,0.12,0.13)*(0.5+0.5*n.y+0.3);
+          float isEye; vec3 col = skin; if (n.z > 0.0) col = eyeCol(n.xy/0.85, vOpen, vec2(0.0), 1.0, iris, skin, isEye);
+          gl_FragColor = vec4(col, 1.0); }`,
+    });
+    M.eyes = new THREE.InstancedMesh(eg, M.eyeMat, N_EYES); M.eyes.frustumCulled = false; modern.add(M.eyes);
+
+    // feathers: long bone blades
+    const fg = new THREE.ConeGeometry(0.28, 1, 6, 1); fg.translate(0, 0.5, 0);
+    M.feathers = new THREE.InstancedMesh(fg, new THREE.MeshStandardMaterial({ color: L('#cfc3b0'), roughness: 0.55, emissive: L('#2a0a08') }), FEATHERS.length); M.feathers.frustumCulled = false; modern.add(M.feathers);
+    // wheels
+    M.rings = RINGS.map((r, i) => { const m = new THREE.Mesh(new THREE.TorusGeometry(r.R, 0.32, 10, 160), new THREE.MeshStandardMaterial({ color: L('#8a6a3a'), metalness: 0.85, roughness: 0.35, emissive: L('#2a1606') })); m.position.copy(MOON); m.quaternion.copy(ringQ[i]); modern.add(m); return m; });
+    // crown
+    const sg = new THREE.ConeGeometry(0.35, 1, 5); sg.translate(0, 0.5, 0);
+    const bone = new THREE.MeshStandardMaterial({ color: L('#d8ccb6'), roughness: 0.6 });
+    SPIKES.forEach(s => { const m = new THREE.Mesh(sg, bone); m.position.set(MOON.x + Math.cos(s.a) * MR * 0.92, MOON.y + Math.sin(s.a) * MR * 0.92, MOON.z + 1); m.rotation.z = s.a - Math.PI / 2; m.scale.set(1, s.len, 1); modern.add(m); });
+    // hanging tendrils
+    const cyl = new THREE.CylinderGeometry(0.6, 1, 1, 8); cyl.translate(0, 0.5, 0);
+    const flesh = new THREE.MeshStandardMaterial({ color: L('#4a2028'), roughness: 0.45, emissive: L('#200406') });
+    M.tend = new THREE.InstancedMesh(cyl, flesh, SEG.length); M.tend.frustumCulled = false; modern.add(M.tend);
+    M.tips = LEAVES.map(() => { const s = sprite('#ff4a2a', 0.9, 0.9); modern.add(s); return s; });
+    // the reaching tendril: chain of flesh spheres with a travelling bulge
+    M.reach = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }), REACH_N);
+    M.reach.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(REACH_N * 3), 3); M.reach.frustumCulled = false; modern.add(M.reach);
+
+    // island
+    const stone = new THREE.MeshStandardMaterial({ color: L('#3a3a42'), roughness: 0.95, flatShading: true });
+    const isl = new THREE.Mesh(new THREE.CylinderGeometry(6.2, 2.2, 3.2, 22, 3), stone);
+    const pa = isl.geometry.attributes.position;
+    for (let i = 0; i < pa.count; i++) { const y = pa.getY(i); if (y < 1.5) { pa.setX(i, pa.getX(i) * (0.85 + rnd() * 0.3)); pa.setZ(i, pa.getZ(i) * (0.85 + rnd() * 0.3)); pa.setY(i, y - rnd() * 1.2); } }
+    isl.geometry.computeVertexNormals(); isl.position.y = -1.6; modern.add(isl);
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(6.25, 6.25, 0.1, 22), new THREE.MeshStandardMaterial({ color: L('#2a282e'), roughness: 1, flatShading: true })); modern.add(top);
+    for (let i = 0; i < 7; i++) { const a = Math.PI * (1.08 + i * 0.14), r = 4.9, h = 1.5 + rnd() * 4; const p = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.42, h, 8), stone); p.position.set(Math.cos(a) * r, h / 2, Math.sin(a) * r); p.rotation.z = (rnd() - 0.5) * 0.2; modern.add(p); }
+    // skulls of earlier wanderers
+    const skullM = new THREE.MeshStandardMaterial({ color: L('#d6cbb5'), roughness: 0.7 }), dark = new THREE.MeshBasicMaterial({ color: 0x050303 });
+    [[1.2, 3.4], [3.6, 0.6], [-4.2, 1.6], [0.6, -2.6], [-0.4, 1.5]].forEach(([x, z]) => { const g = new THREE.Group(); const sk = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), skullM); sk.scale.set(1, 0.9, 1.1); g.add(sk); [-0.08, 0.08].forEach(ex => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), dark); e.position.set(ex, 0.02, 0.2); g.add(e); }); g.position.set(x, 0.18, z); g.rotation.y = rnd() * TAU; modern.add(g); });
+    // dying bonfire
+    const fx = 2.6, fz = 2.4;
+    { const ashM = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.8, 0.18, 14), new THREE.MeshStandardMaterial({ color: L('#1b1716') })); ashM.position.set(fx, 0.09, fz); modern.add(ashM); }
+    M.flames = [0, 1, 2].map(i => { const s = sprite(i ? '#ff5a1a' : '#ffc070', 1, 0.7); modern.add(s); return s; });
+
+    // wanderer (built from joints)
+    const armor = new THREE.MeshStandardMaterial({ color: L('#30333a'), metalness: 0.65, roughness: 0.45 });
+    const limb = (a, b, r) => { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, A.distanceTo(B), 8), armor); m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()); figGroup.add(m); [A, B].forEach(P => { const j = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), armor); j.position.copy(P); figGroup.add(j); }); return m; };
+    M.fig = new THREE.Group();
+    const F = [limb(J.pelvis, J.chest, 0.24), limb(J.chest, J.neck, 0.16), limb(J.pelvis, J.lKnee, 0.11), limb(J.lKnee, J.lAnkle, 0.1), limb(J.lAnkle, J.lToe, 0.08), limb(J.pelvis, J.rKnee, 0.11), limb(J.rKnee, J.rAnkle, 0.1), limb(J.lSh, J.lElb, 0.08), limb(J.lElb, J.lHand, 0.07), limb(J.rSh, J.rElb, 0.08), limb(J.rElb, J.rHand, 0.07), limb(J.lSh, J.rSh, 0.12)];
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 14, 10), armor); head.position.set(...J.head); figGroup.add(head);
+    const blood = new THREE.MeshBasicMaterial({ color: L('#7a0a0a') });
+    const wound = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), blood); wound.position.set(0.22, 0.8, 0.22); figGroup.add(wound);
+    const steel = new THREE.MeshStandardMaterial({ color: L('#9aa0a8'), metalness: 0.9, roughness: 0.35 });
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.95, 0.02), steel); blade.position.set(-0.5, 0.48, 0.96); figGroup.add(blade);
+    const cape = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1.1, 5, 8), new THREE.MeshStandardMaterial({ color: L('#4a1010'), roughness: 0.9, side: THREE.DoubleSide })); cape.position.set(0, 0.6, -0.15); cape.rotation.x = -1.1; figGroup.add(cape);
+    M.capeMesh = cape; M.capeBase = cape.geometry.attributes.position.array.slice();
+    M.figParts = [...figGroup.children];
+    void F;
+    // blood pool and drag marks (static, world space)
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(0.7, 20).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: L('#3a0505') })); pool.position.set(FIG.x + 0.2, 0.06, FIG.z + 0.1); pool.scale.set(1.3, 1, 0.8); modern.add(pool);
+    [-0.25, 0.15].forEach(dx => { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 3.4).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: L('#2a0404') })); m.position.set(FIG.x + dx - 0.4, 0.055, FIG.z - 1.6); m.rotation.y = 0.35; modern.add(m); });
+    // embers + falling ash
+    M.ash = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ map: softTex, color: L('#9a9aa8'), size: 0.09, transparent: true, opacity: 0.7, depthWrite: false }));
+    M.ash.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(260 * 3), 3)); modern.add(M.ash);
+  })();
+
+  // ======================================================================
+  // VOXEL STYLE
+  // ======================================================================
+  const voxel = new THREE.Group(); scene.add(voxel);
+  const V = {};
+  const pal = a => a[Math.floor(rnd() * a.length)];
+  function voxSet(list, basic, parent) {
+    const m = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), basic ? new THREE.MeshBasicMaterial({ color: 0xffffff }) : new THREE.MeshLambertMaterial({ color: 0xffffff }), Math.max(1, list.length));
+    m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1, list.length) * 3), 3);
+    const d = new THREE.Object3D(), c = new THREE.Color();
+    list.forEach((v, i) => { d.position.set(v[0], v[1], v[2]); if (Array.isArray(v[4])) d.scale.set(...v[4]); else d.scale.setScalar(v[4] || 1); d.updateMatrix(); m.setMatrixAt(i, d.matrix); c.set(v[3]).convertSRGBToLinear(); m.setColorAt(i, c); });
+    m.count = list.length; m.frustumCulled = false; (parent || voxel).add(m); return m;
+  }
+  // a voxel eye = disc of cubes in the camera-facing plane, recoloured each frame
+  function eyeDisc(r, vs) { const cells = []; const n = Math.ceil(r / vs); for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) { const u = i / n, v = j / n; if (u * u + v * v <= 1.05) cells.push([i * vs, j * vs, u, v]); } return cells; }
+  (function buildVoxel() {
+    const S = 0.5, list = [];
+    // island with moss, stone, and a crumbling underside
+    for (let x = -6.5; x <= 6.5; x += S) for (let z = -6.5; z <= 6.5; z += S) {
+      const d = Math.hypot(x, z), edge = 6 + Math.sin(Math.atan2(z, x) * 5) * 0.4; if (d > edge) continue;
+      const depth = Math.floor((1 - d / edge) * 9 + rnd() * 2) + 1;
+      for (let k = 0; k < depth; k++) list.push([x, -S / 2 - k * S, z, k === 0 ? pal(['#4a4a52', '#43434b', '#52525a', '#3a4636', '#334030', '#4b4650']) : k === 1 ? pal(['#3a3236', '#2f2a2d']) : pal(['#2a2427', '#241f22', '#1d191c']), S]);
+    }
+    for (let i = 0; i < 26; i++) { const a = rnd() * TAU, d = rnd() * 3.5; list.push([Math.cos(a) * d, -4.5 - rnd() * 2.5, Math.sin(a) * d, '#1d191c', S]); }
+    // pillars with capitals and cracks
+    for (let i = 0; i < 7; i++) {
+      const a = Math.PI * (1.08 + i * 0.14), r = 4.9, h = Math.floor((1.5 + rnd() * 4) / S), px = Math.round(Math.cos(a) * r / S) * S, pz = Math.round(Math.sin(a) * r / S) * S;
+      for (let k = 0; k < h; k++) { list.push([px, S / 2 + k * S, pz, k % 4 === 2 ? '#3e3e46' : pal(['#5a5a62', '#62626a', '#55555c']), S]); if (k === h - 1) for (const [dx, dz] of [[S, 0], [-S, 0], [0, S], [0, -S]]) if (rnd() < 0.7) list.push([px + dx, S / 2 + k * S, pz + dz, '#6a6a72', S * 0.9]); }
+      for (let k = 0; k < 3; k++) list.push([px + (rnd() - 0.5) * 2, S / 2, pz + (rnd() - 0.5) * 2, '#4d4d55', S * 0.7]);
+    }
+    // skulls
+    const sk = (x, z) => { const w = 0.11; for (let i = -1; i <= 1; i++) for (let j = 0; j <= 2; j++) for (let k = -1; k <= 1; k++) { const hole = k === 1 && j === 1 && i !== 0; list.push([x + i * w, 0.06 + j * w, z + k * w, hole ? '#0a0606' : pal(['#d6cbb5', '#cfc3ab', '#e0d6c2']), w]); } };
+    [[1.2, 3.4], [3.6, 0.6], [-4.2, 1.6], [0.6, -2.6], [-0.4, 1.5]].forEach(([x, z]) => sk(x, z));
+    // ribcage
+    for (let r = 0; r < 5; r++) for (let a = 0; a <= Math.PI; a += 0.3) list.push([3.2 + Math.cos(a) * 0.4, 0.05 + Math.sin(a) * 0.35, -1.5 + r * 0.16, '#d0c4ad', 0.08]);
+    // blood pool and drag marks
+    for (let a = 0; a < TAU; a += 0.25) for (let rr = 0; rr < 0.75; rr += 0.12) list.push([FIG.x + 0.2 + Math.cos(a) * rr * 1.3, 0.04, FIG.z + 0.1 + Math.sin(a) * rr * 0.8, pal(['#3a0505', '#4a0808', '#2a0303']), [0.14, 0.06, 0.14]]);
+    for (const dx of [-0.25, 0.15]) for (let k = 0; k < 24; k++) list.push([FIG.x + dx - 0.4 - k * 0.05, 0.035, FIG.z - 0.2 - k * 0.14, pal(['#2a0404', '#3a0606']), [0.12, 0.05, 0.14]]);
+    // dying bonfire
+    for (let a = 0; a < TAU; a += 0.4) for (let rr = 0.15; rr < 0.7; rr += 0.18) list.push([2.6 + Math.cos(a) * rr, 0.06, 2.4 + Math.sin(a) * rr, pal(['#1b1716', '#24201e']), 0.16]);
+    V.static = voxSet(list);
+
+    // the great eye: a finer shell so the eye reads clearly
+    const ms = 0.36, ml = []; V.moonN = [];
+    for (let x = -MR; x <= MR + ms * 0.5; x += ms) for (let y = -MR; y <= MR + ms * 0.5; y += ms) for (let z = -1; z <= MR + ms * 0.5; z += ms) {
+      const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - MR) < ms * 0.55) { ml.push([MOON.x + x, MOON.y + y, MOON.z + z, '#cccccc', ms * 1.02]); V.moonN.push([x / d, y / d, z / d, rnd(), Math.sin(x * 2.3 + y * 1.7), d]); }
+    }
+    V.moon = voxSet(ml, true);
+    // lid spikes (lashes of bone) along the almond
+    const lash = [];
+    for (let u = -0.9; u <= 0.9; u += 0.15) for (const sgn of [1, -1]) {
+      const nx = u * 0.62, ny = sgn * 0.58 * 0.62 * (1 - u * u) + sgn * 0.08, nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+      const len = 1.2 + (1 - Math.abs(u)) * 1.6; for (let k = 0; k < len / 0.22; k++) { const r = MR + 0.2 + k * 0.22; lash.push([MOON.x + nx * r, MOON.y + ny * r + sgn * k * 0.08, MOON.z + nz * r, k > len / 0.22 - 2 ? '#f0e6d0' : '#bfb29a', 0.2 - k * 0.012]); }
+    }
+    V.lash = voxSet(lash, true);
+    // crown spikes
+    const cr = [];
+    SPIKES.forEach(s => { const n = Math.round(s.len / 0.3); for (let k = 0; k < n; k++) { const r = MR * 0.95 + k * 0.3, w = 0.42 * (1 - k / n) + 0.1; cr.push([MOON.x + Math.cos(s.a) * r, MOON.y + Math.sin(s.a) * r, MOON.z + 1, k > n - 3 ? '#efe4cf' : pal(['#cfc3ab', '#bfb29a']), w]); } });
+    V.crown = voxSet(cr, true);
+
+    // feathers (recomputed every frame) and their eyes
+    V.fSlots = []; FEATHERS.forEach(f => { const n = Math.round(f.len / 0.32); for (let k = 0; k < n; k++) V.fSlots.push({ f, k: k / n, size: 0.42 * (1 - k / n * 0.6) }); });
+    V.feath = voxSet(V.fSlots.map(s => [0, 0, 0, s.k > 0.75 ? '#e8dcc4' : s.k > 0.4 ? '#bfb29a' : '#7a5a50', s.size]), true);
+    // rings
+    V.rSlots = []; RINGS.forEach((r, ri) => { const n = Math.round(TAU * r.R / 0.4); for (let k = 0; k < n; k++) V.rSlots.push({ ri, a: k / n * TAU, c: k % 6 === 0 ? '#e6b84a' : pal(['#8a6a3a', '#7a5a2a', '#9a7a42']) }); });
+    V.rings = voxSet(V.rSlots.map(s => [0, 0, 0, s.c, 0.42]), true);
+    // tendrils
+    V.tSlots = []; SEG.forEach(sg => { const n = Math.max(2, Math.round(sg.len / 0.4)); for (let i = 0; i < n; i++) V.tSlots.push({ sg, f: i / n, size: 0.55 - sg.depth * 0.11 }); });
+    V.tend = voxSet(V.tSlots.map(s => [0, 0, 0, pal(['#5a2a30', '#4a2026', '#6a3036']), s.size]), true);
+    V.tips = voxSet(LEAVES.map(() => [0, 0, 0, '#ff4a2a', 0.4]), true);
+    // reaching tendril
+    V.reach = voxSet(Array.from({ length: REACH_N }, () => [0, 0, 0, '#5a2a30', 0.4]), true);
+    // ground veins
+    V.veins = voxSet(VEINPTS.map(() => [0, 0, 0, '#ff2a1a', 1]), true);
+    // eyes: one big pool of voxels for every small eye
+    V.eyeDefs = []; const ecells = [];
+    const addEye = (r) => { const cells = eyeDisc(r, 0.2); V.eyeDefs.push({ r, start: ecells.length, cells, seed: rnd() * 6 }); cells.forEach(() => ecells.push([0, 0, 0, '#ffffff', 0.21])); };
+    FEATHERS.forEach(() => addEye(0.62)); RINGS.forEach(r => { for (let k = 0; k < r.N; k++) addEye(0.85); }); for (let k = 0; k < 4; k++) addEye(0.55);
+    V.eyes = voxSet(ecells, true);
+    // fire + falling ash
+    V.fire = voxSet(Array.from({ length: 16 }, () => [0, 0, 0, '#ff7a3d', 0.13]), true);
+    V.ash = voxSet(Array.from({ length: 200 }, () => [0, 0, 0, pal(['#8a8a96', '#6a6a76', '#a0a0aa']), 0.07]), true);
+
+    // the wanderer, in voxels, inside the animated figure group
+    const fl = [], w = 0.1, armorC = () => pal(['#30333a', '#383b44', '#2a2c32', '#41444d']);
+    const seg = (a, b, r, col) => { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), n = Math.ceil(A.distanceTo(B) / (w * 0.8)); for (let i = 0; i <= n; i++) { const P = A.clone().lerp(B, i / n); for (let x = -r; x <= r + 1e-6; x += w) for (let y = -r; y <= r + 1e-6; y += w) for (let z = -r; z <= r + 1e-6; z += w) if (x * x + y * y + z * z <= r * r + 1e-4) fl.push([Math.round((P.x + x) / w) * w, Math.round((P.y + y) / w) * w, Math.round((P.z + z) / w) * w, typeof col === 'function' ? col() : col, w]); } };
+    seg(J.pelvis, J.chest, 0.22, armorC); seg(J.chest, J.neck, 0.13, armorC); seg(J.neck, J.head, 0.17, armorC);
+    seg(J.pelvis, J.lKnee, 0.1, armorC); seg(J.lKnee, J.lAnkle, 0.1, armorC); seg(J.lAnkle, J.lToe, 0.07, armorC);
+    seg(J.pelvis, J.rKnee, 0.1, armorC); seg(J.rKnee, J.rAnkle, 0.1, armorC);
+    seg(J.lSh, J.rSh, 0.1, armorC); seg(J.lSh, J.lElb, 0.08, armorC); seg(J.lElb, J.lHand, 0.07, armorC); seg(J.rSh, J.rElb, 0.08, armorC); seg(J.rElb, J.rHand, 0.07, armorC);
+    seg([0.2, 0.82, 0.2], [0.24, 0.7, 0.26], 0.08, () => pal(['#8a0a0a', '#a01010', '#6a0606'])); // wound
+    seg([0.24, 0.66, 0.28], [0.3, 0.1, 0.36], 0.03, '#7a0808'); // blood running down
+    seg(SWORD.base, SWORD.top, 0.035, '#a0a6ae'); seg([-0.64, 0.82, 0.93], [-0.36, 0.82, 0.93], 0.035, '#a0a6ae');
+    for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) if (rnd() < 0.85 - r * 0.05) fl.push([(c - 2) * w, 0.95 - r * w * 0.6, 0.1 - r * w * 0.9, pal(['#4a1010', '#5a1414', '#3a0c0c']), w]); // torn cape
+    for (let k = 0; k < 14; k++) { const a = k / 14 * TAU * 2; fl.push([J.lAnkle[0] + Math.cos(a) * 0.16, J.lAnkle[1] + Math.sin(a) * 0.16, J.lAnkle[2] + 0.12 - k * 0.025, '#6a3036', 0.1]); } // coil around ankle
+    V.fig = voxSet(fl, false, figGroup);
+
+    // distant watchers: smaller eye-entities with dangling tentacles, far behind the main one
+    V.bg = [[-62, 30, -140, 4.5], [70, 22, -150, 5], [-40, -4, -118, 3.2], [48, -10, -124, 3.6], [-92, 6, -168, 4], [22, 42, -172, 3.8], [98, 46, -182, 4.2], [-20, 60, -200, 5]]
+      .map(([x, y, z, R]) => ({ x, y, z, R: R * 1.6, seed: rnd() * TAU, off: rnd() }));
+    const sh = []; V.bgCells = [];
+    V.bg.forEach((e, ei) => { const vs = 0.7; for (let x = -e.R; x <= e.R + vs * 0.5; x += vs) for (let y = -e.R; y <= e.R + vs * 0.5; y += vs) for (let z = -e.R * 0.2; z <= e.R + vs * 0.5; z += vs) { const d = Math.sqrt(x * x + y * y + z * z); if (Math.abs(d - e.R) < vs * 0.55) { sh.push([0, 0, 0, '#888888', vs * 1.03]); V.bgCells.push({ ei, n: [x / d, y / d, z / d], d, nz: rnd() }); } } });
+    V.bgShell = voxSet(sh, true);
+    V.bgTent = []; V.bg.forEach((e, ei) => { for (let j = 0; j < 7; j++) for (let k = 0; k < 26; k++) V.bgTent.push({ ei, j, k, a: -Math.PI / 2 + (j - 3) * 0.3 }); });
+    V.bgTentM = voxSet(V.bgTent.map(c => [0, 0, 0, c.k > 21 ? '#9a3a4a' : pal(['#3a1a2e', '#2a1424', '#4a2034']), 0.8 * (1.3 - c.k / 26)]), true);
+    // colossal tentacles rising out of the void
+    V.giant = []; [[-120, -1], [-70, 1], [62, -1], [118, 1], [-15, 1]].forEach(([bx, side], gi) => { for (let k = 0; k < 48; k++) V.giant.push({ gi, bx, side, k, seed: gi * 1.7 }); });
+    V.giantM = voxSet(V.giant.map(c => [0, 0, 0, c.k % 6 === 3 ? '#8a3a5a' : pal(['#24122a', '#1c0e22', '#2e1634']), 1]), true);
+    // twinkling stars
+    V.tw = []; const tws = []; for (let i = 0; i < 90; i++) { const a = rnd() * TAU, u = rnd() * 0.9 + 0.05, r = 260; const P = [Math.cos(a) * r * 0.9, -40 + u * 200, -200 - rnd() * 60]; V.tw.push({ k: 1 + Math.floor(rnd() * 4), ph: rnd() * TAU }); tws.push([P[0], P[1], P[2], '#ffffff', 1 + rnd() * 1.2]); }
+    V.twM = voxSet(tws, true);
+    // embers from the dying fire, and rubble drifting in the mid-ground
+    V.emb = voxSet(Array.from({ length: 34 }, () => [0, 0, 0, '#ffa24a', 0.09]), true);
+    V.rub = []; for (let i = 0; i < 18; i++) V.rub.push({ x: (rnd() - 0.5) * 60, y: -6 + rnd() * 26, z: -12 - rnd() * 18, k: 0.5 + rnd() * 1.4, ph: rnd() * TAU });
+    V.rubM = voxSet(V.rub.map(() => [0, 0, 0, pal(['#3a3a42', '#2f2f36', '#45404a']), 1]));
+  })();
+  V.fig.visible = false;
+
+  // ---------- per-frame ----------
+  const D = new THREE.Object3D(), C = new THREE.Color(), tmp = new THREE.Vector3(), camDir = new THREE.Vector3();
+  const plane = (x, y, z, s) => [MOON.x + x, MOON.y + y, MOON.z + z];
+  function eyeWorldPositions(t) { // every small eye's world position
+    const out = [];
+    FEATHERS.forEach(f => { const [rx, ry, tx, ty] = featherAt(f, t); const fa = Math.atan2(ty - ry, tx - rx), bend = (reduced ? 0 : 1) * f.side * 0.9 * Math.sin(t / LOOP * TAU * 2 + f.j * 0.7 + f.w * 1.3); out.push(new THREE.Vector3(MOON.x + tx - Math.sin(fa) * bend, MOON.y + ty + Math.cos(fa) * bend, MOON.z + 2 + f.w * 0.4)); });
+    RINGS.forEach((r, ri) => { for (let k = 0; k < r.N; k++) out.push(ringPoint(ri, k / r.N * TAU, t)); });
+    [0.32, 0.5, 0.66, 0.8].forEach(u => out.push(reachCurve.getPoint(u).add(new THREE.Vector3(0, 0.45, 0.3))));
+    return out;
+  }
+  function animate(t, style) {
+    const S = window.SHOT, p = t / LOOP * TAU, yank = S ? S.pulse : yankAt(t), lc = S ? S.lc : lookCam(t);
+    poseTendrils(t); poseFigure(t);
+    reachCtrl[5].copy(ankleWorld()); reachCtrl[4].set(reachCtrl[5].x - 0.2, 0.25, reachCtrl[5].z - 1.6);
+    camera.position.set(Math.sin(p) * 0.9 + yank * 0.1 * Math.sin(p * 97), 6 + Math.sin(2 * p) * 0.15 + yank * 0.06 * Math.sin(p * 83), 30 + Math.cos(p) * 0.5);
+    camera.lookAt(CAM_T);
+    if (window.CAMO) { camera.position.set(...CAMO.pos); camera.lookAt(...CAMO.look); camera.fov = CAMO.fov; camera.updateProjectionMatrix(); }
+    rays.material.rotation = p / 7 * 1; rays2.material.rotation = -p / 7 * 1; // 1/7 turn per loop matches the 28-ray symmetry
+    const gk = style === 'voxel' ? 0.45 : 1;
+    halo.material.opacity = gk * (0.4 + 0.2 * yank + 0.05 * Math.sin(p * 2)); rays.material.opacity = gk * 0.22; rays2.material.opacity = gk * 0.12;
+    redLight.intensity = 2.4 + 2 * yank + 0.6 * Math.sin(p * 4);
+    fireLight.intensity = 0.9 + 0.3 * Math.sin(p * 17) * Math.sin(p * 5);
+    const iris = irisRGB(t);
+    // great eye gaze: tracks the wanderer, snaps to the viewer, twitches during yanks
+    const gFig = [-0.2, -0.16], gCam = [0, 0];
+    const sc = saccade(t);
+    const gx = gFig[0] * (1 - lc) + gCam[0] * lc + 0.05 * Math.sin(p * 9) * yank + sc[0] * (S ? 1 - lc : 1) + (S ? S.gOff[0] : 0), gy = gFig[1] * (1 - lc) + gCam[1] * lc + sc[1] * (S ? 1 - lc : 1) + (S ? S.gOff[1] : 0);
+    const pupilW = S ? S.pupil : 0.085 + 0.13 * yank + 0.015 * Math.sin(p * 4);
+    const open = S ? S.open : lidAt(t);
+    post.uniforms.pulse.value = yank;
+    const eyesW = eyeWorldPositions(t);
+    const target = new THREE.Vector3().lerpVectors(new THREE.Vector3(FIG.x, 1, FIG.z), camera.position, lc);
+    const reachPts = []; for (let i = 0; i < REACH_N; i++) { const u = i / (REACH_N - 1); reachPts.push([reachCurve.getPoint(u), u, Math.pow(Math.max(0, Math.sin(TAU * (u * 3 - t / LOOP * 2))), 6)]); }
+
+    if (style === 'modern') {
+      M.moonMat.uniforms.gaze.value.set(gx / 0.62 * 0.62, gy); M.moonMat.uniforms.open.value = open;
+      M.moonMat.uniforms.iris.value.set(...iris); M.eyeMat.uniforms.iris.value.set(...iris);
+      eyesW.forEach((e, i) => { const r = i < FEATHERS.length ? 0.6 : i < FEATHERS.length + 28 ? 0.85 : 0.5; D.position.copy(e); D.lookAt(target); D.scale.setScalar(r); D.updateMatrix(); M.eyes.setMatrixAt(i, D.matrix); M.eyeOpen.setX(i, lidAt(t, i * 0.137)); });
+      M.eyes.instanceMatrix.needsUpdate = true; M.eyeOpen.needsUpdate = true;
+      FEATHERS.forEach((f, i) => { const [rx, ry, tx, ty] = featherAt(f, t); D.position.set(MOON.x + rx, MOON.y + ry, MOON.z + 1.6 + f.w * 0.4); D.rotation.set(0, 0, Math.atan2(ty - ry, tx - rx) - Math.PI / 2); D.scale.set(0.9, Math.hypot(tx - rx, ty - ry), 0.9); D.updateMatrix(); M.feathers.setMatrixAt(i, D.matrix); });
+      M.feathers.instanceMatrix.needsUpdate = true;
+      M.rings.forEach((m, i) => { m.quaternion.copy(ringQ[i]); m.rotateZ(RINGS[i].dir * (t / LOOP) * TAU / RINGS[i].N * 2); });
+      SEG.forEach((s, i) => { const r = 0.42 * Math.pow(0.62, s.depth); D.position.set(MOON.x + s.sx, MOON.y + s.sy, MOON.z + 3 + s.depth * 0.3); D.rotation.set(0, 0, s.a - Math.PI / 2); D.scale.set(r, s.len, r); D.updateMatrix(); M.tend.setMatrixAt(i, D.matrix); });
+      M.tend.instanceMatrix.needsUpdate = true;
+      LEAVES.forEach((s, i) => { M.tips[i].position.set(MOON.x + s.ex, MOON.y + s.ey, MOON.z + 3.3 + s.depth * 0.3); M.tips[i].material.opacity = 0.5 + 0.4 * Math.sin(p * 3 + i); });
+      reachPts.forEach(([P, u, b], i) => { const r = (0.75 * (1 - u) + 0.13) * (1 + 0.5 * b); D.position.copy(P); D.rotation.set(0, 0, 0); D.scale.setScalar(r); D.updateMatrix(); M.reach.setMatrixAt(i, D.matrix); C.setRGB(0.28 + b * 1.2, 0.06 + b * 0.15, 0.08 + b * 0.05); M.reach.setColorAt(i, C); });
+      M.reach.instanceMatrix.needsUpdate = true; M.reach.instanceColor.needsUpdate = true;
+      M.flames.forEach((s, i) => { const h = 0.35 + i * 0.1 + 0.08 * Math.sin(p * (11 + i * 4)); s.position.set(2.6 + 0.05 * Math.sin(p * 13 + i), 0.25 + h * 0.5, 2.4); s.scale.set(0.6 - i * 0.1, h * 1.2, 1); });
+      const ap = M.ash.geometry.attributes.position;
+      for (let i = 0; i < ap.count; i++) { const f = frac(t / LOOP * (1 + (i % 2)) + i * 0.0731); ap.setXYZ(i, ((i * 37) % 44) - 22 + Math.sin(f * TAU * 2 + i) * 0.6, 14 - f * 16, -((i * 7) % 28) + 6); }
+      ap.needsUpdate = true;
+    } else {
+      // great eye
+      const breath = 1 + (reduced ? 0 : 0.018 * Math.sin(p * 2) + 0.025 * yank);
+      V.moonN.forEach((n, i) => {
+        D.position.set(MOON.x + n[0] * n[5] * breath, MOON.y + n[1] * n[5] * breath, MOON.z + n[2] * n[5] * breath); D.rotation.set(0, 0, 0); D.scale.setScalar(0.37 * breath); D.updateMatrix(); V.moon.setMatrixAt(i, D.matrix);
+        let c = null; if (n[2] > 0.1) c = eyePix(n[0] / 0.62, n[1] / 0.62, open, gx, gy, false, iris, 0, pupilW);
+        const lit = 0.38 + 0.62 * Math.max(0, n[1] * 0.3 + n[2] * 0.9);
+        if (!c) { const nz = n[3]; c = Math.abs(n[4]) < 0.08 && n[2] > -0.2 ? [0.5, 0.08, 0.1] : [0.72 - nz * 0.2, 0.64 - nz * 0.2, 0.6 - nz * 0.18]; c = [c[0] * lit, c[1] * lit, c[2] * lit]; }
+        C.setRGB(c[0], c[1], c[2]).convertSRGBToLinear(); V.moon.setColorAt(i, C);
+      });
+      V.moon.instanceColor.needsUpdate = true; V.moon.instanceMatrix.needsUpdate = true;
+      // small eyes
+      eyesW.forEach((e, ei) => {
+        const def = V.eyeDefs[ei]; if (!def) return;
+        const o = lidAt(t, ei * 0.137);
+        tmp.copy(target).sub(e); const lgx = Math.max(-0.35, Math.min(0.35, tmp.x / 18)), lgy = Math.max(-0.35, Math.min(0.35, tmp.y / 18));
+        def.cells.forEach((c, k) => { const idx = def.start + k; D.position.set(e.x + c[0], e.y + c[1], e.z + 0.3); D.rotation.set(0, 0, 0); D.scale.setScalar(0.21); D.updateMatrix(); V.eyes.setMatrixAt(idx, D.matrix); const col = eyePix(c[2], c[3], o, lgx, lgy, true, iris, def.seed) || [0.3, 0.08, 0.1]; C.setRGB(col[0], col[1], col[2]).convertSRGBToLinear(); V.eyes.setColorAt(idx, C); });
+      });
+      V.eyes.instanceMatrix.needsUpdate = true; V.eyes.instanceColor.needsUpdate = true;
+      V.fSlots.forEach((s, i) => { const [rx, ry, tx, ty] = featherAt(s.f, t); const fa = Math.atan2(ty - ry, tx - rx), bend = (reduced ? 0 : 1) * s.f.side * 0.9 * s.k * s.k * Math.sin(p * 2 + s.f.j * 0.7 + s.f.w * 1.3); D.position.set(MOON.x + rx + (tx - rx) * s.k - Math.sin(fa) * bend, MOON.y + ry + (ty - ry) * s.k + Math.cos(fa) * bend, MOON.z + 1.6 + s.f.w * 0.4); D.scale.setScalar(s.size); D.updateMatrix(); V.feath.setMatrixAt(i, D.matrix); });
+      V.feath.instanceMatrix.needsUpdate = true;
+      V.rSlots.forEach((s, i) => { D.position.copy(ringPoint(s.ri, s.a, t)); D.scale.setScalar(0.42); D.updateMatrix(); V.rings.setMatrixAt(i, D.matrix); });
+      V.rings.instanceMatrix.needsUpdate = true;
+      V.tSlots.forEach((s, i) => { const g = s.sg, wv = (reduced ? 0 : 1) * Math.sin(s.f * Math.PI) * 0.35 * Math.sin(p * 3 + g.off + s.f * 4); D.position.set(MOON.x + g.sx + (g.ex - g.sx) * s.f - Math.sin(g.a) * wv, MOON.y + g.sy + (g.ey - g.sy) * s.f + Math.cos(g.a) * wv, MOON.z + 3 + g.depth * 0.3); D.scale.setScalar(s.size); D.updateMatrix(); V.tend.setMatrixAt(i, D.matrix); });
+      V.tend.instanceMatrix.needsUpdate = true;
+      LEAVES.forEach((s, i) => { D.position.set(MOON.x + s.ex, MOON.y + s.ey, MOON.z + 3.3); D.scale.setScalar(0.32 + 0.12 * Math.sin(p * 3 + i)); D.updateMatrix(); V.tips.setMatrixAt(i, D.matrix); });
+      V.tips.instanceMatrix.needsUpdate = true;
+      reachPts.forEach(([P, u, b], i) => { const r = ((0.75 * (1 - u) + 0.13) * (1 + 0.5 * b)) * 1.6; D.position.set(Math.round(P.x / 0.2) * 0.2, Math.round(P.y / 0.2) * 0.2, Math.round(P.z / 0.2) * 0.2); D.scale.setScalar(r); D.updateMatrix(); V.reach.setMatrixAt(i, D.matrix); C.setRGB(0.1 + b * 1.4, 0.015 + b * 0.16, 0.025 + b * 0.04); V.reach.setColorAt(i, C); });
+      V.reach.instanceMatrix.needsUpdate = true; V.reach.instanceColor.needsUpdate = true;
+      for (let i = 0; i < 16; i++) { const f = frac(t / LOOP * (2 + i % 3) * 2 + i * 0.173), h = f * 0.7; D.position.set(2.6 + Math.round(Math.sin(i * 2.3) * 2) * 0.12 * (1 - f), 0.2 + Math.round(h / 0.12) * 0.12, 2.4); D.scale.setScalar(0.14 * (1 - f * 0.6)); D.updateMatrix(); V.fire.setMatrixAt(i, D.matrix); C.set(['#fff1b0', '#ffd27a', '#ffa24a', '#ff7a3d', '#a0301a'][Math.min(4, Math.floor(f * 5))]).convertSRGBToLinear(); V.fire.setColorAt(i, C); }
+      V.fire.instanceMatrix.needsUpdate = true; V.fire.instanceColor.needsUpdate = true;
+      for (let i = 0; i < 200; i++) { const f = frac(t / LOOP * (1 + (i % 2)) + i * 0.0731); D.position.set(((i * 37) % 44) - 22 + Math.round(Math.sin(f * TAU * 2 + i) * 3) * 0.2, 14 - f * 16, -((i * 7) % 28) + 6); D.scale.setScalar(0.08); D.updateMatrix(); V.ash.setMatrixAt(i, D.matrix); }
+      V.ash.instanceMatrix.needsUpdate = true;
+      // distant watchers
+      const bob = V.bg.map(e => [Math.sin(p + e.seed) * 0.9, Math.cos(p + e.seed) * 0.4]);
+      V.bgCells.forEach((c, i) => {
+        const e = V.bg[c.ei], b = bob[c.ei], n = c.n;
+        D.position.set(e.x + b[1] + n[0] * c.d, e.y + b[0] + n[1] * c.d, e.z + n[2] * c.d); D.rotation.set(0, 0, 0); D.scale.setScalar(0.73); D.updateMatrix(); V.bgShell.setMatrixAt(i, D.matrix);
+        const tx = (MOON.x - e.x) * (1 - lc) + (camera.position.x - e.x) * lc, ty = (MOON.y - e.y) * (1 - lc) + (camera.position.y - e.y) * lc, tl = Math.hypot(tx, ty) || 1;
+        let col = n[2] > 0.1 ? eyePix(n[0] / 0.7, n[1] / 0.7, lidAt(t, e.off), tx / tl * 0.3, ty / tl * 0.3, false, irisRGB(t, e.seed), e.seed) : null;
+        const lit = 0.35 + 0.65 * Math.max(0, n[1] * 0.3 + n[2] * 0.9);
+        if (!col) col = [(0.52 - c.nz * 0.12) * lit, (0.3 - c.nz * 0.08) * lit, (0.46 - c.nz * 0.1) * lit]; else col = [col[0] * 0.95, col[1] * 0.85, col[2] * 0.95];
+        C.setRGB(col[0], col[1], col[2]).convertSRGBToLinear(); V.bgShell.setColorAt(i, C);
+      });
+      V.bgShell.instanceMatrix.needsUpdate = true; V.bgShell.instanceColor.needsUpdate = true;
+      let prev = null;
+      V.bgTent.forEach((c, i) => {
+        const e = V.bg[c.ei], b = bob[c.ei];
+        if (c.k === 0) { prev = { x: e.x + b[1] + Math.cos(c.a) * e.R * 0.85, y: e.y + b[0] + Math.sin(c.a) * e.R * 0.85, a: c.a }; }
+        else { const ang = c.a + (reduced ? 0 : 1) * 0.55 * (c.k / 21) * Math.sin(p * 2 + c.k * 0.35 + e.seed + c.j * 0.9); prev = { x: prev.x + Math.cos(ang) * 0.7, y: prev.y + Math.sin(ang) * 0.7, a: ang }; }
+        D.position.set(prev.x, prev.y, e.z + 0.5); D.rotation.set(0, 0, 0); D.scale.setScalar(0.8 * (1.3 - c.k / 26)); D.updateMatrix(); V.bgTentM.setMatrixAt(i, D.matrix);
+      });
+      V.bgTentM.instanceMatrix.needsUpdate = true;
+      let gp = null;
+      V.giant.forEach((c, i) => {
+        if (c.k === 0) gp = { x: c.bx, y: -78 };
+        const ang = Math.PI / 2 + c.side * 0.0007 * c.k * c.k + (reduced ? 0 : 1) * 0.22 * (c.k / 47) * Math.sin(p + c.k * 0.13 + c.seed);
+        gp = { x: gp.x + Math.cos(ang) * 2.1, y: gp.y + Math.sin(ang) * 2.1 };
+        const sz = 4.6 * (1 - c.k / 52) + 0.5;
+        D.position.set(gp.x, gp.y, -205); D.rotation.set(0, 0, ang); D.scale.setScalar(sz); D.updateMatrix(); V.giantM.setMatrixAt(i, D.matrix);
+      });
+      V.giantM.instanceMatrix.needsUpdate = true;
+      V.tw.forEach((s, i) => { const k = 0.35 + 0.65 * Math.max(0, Math.sin(p * s.k + s.ph)); C.setRGB(k, k * 0.95, k * 1.1); V.twM.setColorAt(i, C); });
+      V.twM.instanceColor.needsUpdate = true;
+      for (let i = 0; i < 34; i++) { const k = 1 + (i % 3), f = frac(t / LOOP * k + i * 0.137); D.position.set(2.6 + Math.sin(i * 7.1 + f * 6) * 0.5 * f, 0.3 + f * 4, 2.4 + Math.cos(i * 3.3 + f * 5) * 0.4 * f); D.rotation.set(0, 0, 0); D.scale.setScalar(0.1 * (1 - f)); D.updateMatrix(); V.emb.setMatrixAt(i, D.matrix); }
+      V.emb.instanceMatrix.needsUpdate = true;
+      V.rub.forEach((r, i) => { D.position.set(r.x + Math.cos(p + r.ph) * 0.8, r.y + Math.sin(p * 2 + r.ph) * 0.5, r.z); D.rotation.set(p + r.ph, p * 2 + r.ph, 0); D.scale.setScalar(r.k); D.updateMatrix(); V.rubM.setMatrixAt(i, D.matrix); });
+      V.rubM.instanceMatrix.needsUpdate = true;
+    }
+    // ground veins pulse outward from the tendril, shared by both styles
+    VEINPTS.forEach((v, i) => { const w = Math.pow(Math.max(0, Math.sin(TAU * (v[2] / 22 - t / LOOP * 3))), 3); D.position.set(v[0], 0.05, v[1]); D.rotation.set(0, 0, 0); D.scale.set(0.2, 0.05, 0.2); D.updateMatrix(); V.veins.setMatrixAt(i, D.matrix); C.setRGB(0.5 + w * 2.5 + yank, 0.03 + w * 0.3, 0.02); V.veins.setColorAt(i, C); });
+    V.veins.instanceMatrix.needsUpdate = true; V.veins.instanceColor.needsUpdate = true;
+  }
+
+  // ---------- style, sizing, render ----------
+  let style = 'voxel';
+  function setStyle(s) {
+    style = s; document.body.classList.toggle('voxel', s === 'voxel');
+    modern.visible = s === 'modern'; voxel.visible = s === 'voxel';
+    V.veins.visible = true; voxel.add(V.veins); if (s === 'modern') scene.add(V.veins);
+    M.figParts.forEach(o => o.visible = s === 'modern'); V.fig.visible = s === 'voxel';
+    scene.fog = s === 'modern' ? new THREE.FogExp2(L('#04040a'), 0.005) : null;
+    post.uniforms.voxel.value = s === 'voxel' ? 1 : 0;
+    post.uniforms.exposure.value = s === 'voxel' ? 0.95 : 1.15;
+    $('sVox').setAttribute('aria-pressed', s === 'voxel'); $('sMod').setAttribute('aria-pressed', s === 'modern');
+    resize();
+  }
+  const bufSize = new THREE.Vector2();
+  function resize() {
+    const r = cv.getBoundingClientRect(); if (!r.width) return;
+    if (style === 'voxel') { renderer.setPixelRatio(1); renderer.setSize(Math.round(r.width / 2.1), Math.round(r.height / 2.1), false); }
+    else { renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); renderer.setSize(r.width, r.height, false); }
+    renderer.getDrawingBufferSize(bufSize); rt.setSize(bufSize.x, bufSize.y); post.uniforms.res.value.copy(bufSize);
+    camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize);
+  function renderAt(t) {
+    animate(t, style);
+    post.uniforms.phase.value = t / LOOP * TAU; post.uniforms.frameN.value = Math.floor(t * 24); if (window.SHOT) post.uniforms.exposure.value = 0.95 * SHOT.exposure;
+    renderer.setRenderTarget(rt); renderer.render(scene, camera);
+    renderer.setRenderTarget(null); renderer.render(postScene, postCam);
+  }
+
+  // ---------- title-screen UI ----------
+  let state = 'press', sel = 0, toastT = null;
+  const items = [...$('menu').children];
+  items.forEach((li, i) => { li.onmouseenter = () => pick(i); li.onclick = e => { e.stopPropagation(); pick(i); choose(); }; });
+  function setState(s) {
+    state = s; $('ui').hidden = s === 'none'; $('press').hidden = s !== 'press'; $('menu').hidden = s !== 'menu';
+    ['stPress', 'stMenu', 'stNone'].forEach(id => $(id).setAttribute('aria-pressed', id === { press: 'stPress', menu: 'stMenu', none: 'stNone' }[s]));
+    if (s === 'menu') pick(sel);
+  }
+  function pick(i) { sel = (i + items.length) % items.length; items.forEach((li, k) => li.classList.toggle('on', k === sel)); }
+  function choose() { $('toast').textContent = items[sel].dataset.msg; $('toast').hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $('toast').hidden = true, 2600); }
+  $('screen').addEventListener('click', () => { if (state === 'press') setState('menu'); });
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;
+    if (e.key === 'v' || e.key === 'V') return setStyle(style === 'voxel' ? 'modern' : 'voxel');
+    if (e.key === 'r' || e.key === 'R') return setRec(!document.body.classList.contains('rec'));
+    if (e.key === 'Escape') return setRec(false);
+    if (e.code === 'Space' && state !== 'menu') { e.preventDefault(); return togglePlay(); }
+    if (state === 'press') return setState('menu');
+    if (state === 'menu') {
+      if (e.key === 'ArrowDown' || e.key === 's') { e.preventDefault(); pick(sel + 1); }
+      else if (e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); pick(sel - 1); }
+      else if (e.key === 'Enter' || e.code === 'Space') { e.preventDefault(); choose(); }
+      else if (e.key === 'Backspace') setState('press');
+    }
+  });
+  $('sVox').onclick = () => setStyle('voxel'); $('sMod').onclick = () => setStyle('modern');
+  $('stPress').onclick = () => setState('press'); $('stMenu').onclick = () => setState('menu'); $('stNone').onclick = () => setState('none');
+  function setRec(on) { document.body.classList.toggle('rec', on); if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {}); requestAnimationFrame(resize); }
+  $('recBtn').onclick = () => setRec(true); $('exitRec').onclick = () => setRec(false);
+
+  let playing = true, t0 = performance.now(), held = 0;
+  function togglePlay() { playing = !playing; if (playing) t0 = performance.now() - held * 1000; $('playBtn').textContent = playing ? 'Pause' : 'Play'; }
+  $('playBtn').onclick = togglePlay;
+  let frame = 0;
+  function loop(now) {
+    const t = playing ? ((now - t0) / 1000) % LOOP : held;
+    held = t; renderAt(t);
+    if (frame++ % 10 === 0) $('clock').textContent = `loop ${t.toFixed(1)} / ${LOOP.toFixed(1)} s`;
+    requestAnimationFrame(loop);
+  }
+  window.SB = { LOOP, renderAt: t => { playing = false; held = t; renderAt(t); }, setStyle, setState };
+  setStyle('voxel'); setState('press'); requestAnimationFrame(loop);
+})();
+</script>

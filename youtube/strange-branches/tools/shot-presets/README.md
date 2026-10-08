@@ -16,3 +16,15 @@ S=<folder containing npmthree/> BEATS=strain,wrath,lunge PORTS=0,1 node render-s
 ffmpeg -framerate 24 -i out/strain-16x9/f%04d.png -vf scale=1920:1080:flags=neighbor -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 26 -movflags +faststart strain.mp4
 ```
 Every beat is a small function of time in `render-shots.js` (`BEATS.strain.at(...)`). To change timing, camera or intensity, edit the numbers there and re-render.
+
+## Main: the Floating Eye
+| Beat | Length | What happens | Camera |
+|---|---|---|---|
+| **Struggle** | 3.0 s | The wounded knight pushes up off the ground and is yanked back down by the tendril, twice | Low over-the-shoulder, slow creep in |
+| **Drift** | 3.0 s | Establishing shot; small eyes blink; the great eye gazes off to the side | Slow upward drift, wide |
+| **Notice** | 3.0 s | The great eye and every small eye snap onto the viewer; the pupil contracts; heartbeat thump | Locked off, with micro-shake on the thump |
+| **Crash zoom** | 2.0 s | Accelerating push into the slit pupil, glitch, fade to black | Push in plus zoom |
+
+Re-render with `render-eye-shots.js` (same usage as above, against `eye-shots.html`). Beat names: `struggle,drift,notice,crashzoom`.
+
+**Suggested edits:** Eye = Struggle → Drift → Notice → Crash zoom (11 s). Ascension = Strain → Wrath → Lunge (8.5 s).
