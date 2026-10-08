@@ -38,7 +38,10 @@ for f in Strange-Branches-new-assets*/*; do
     strange-branches-logo-*.png|strange-branches-banner-*.png) move "$f" "04 Branding (logo + banner)" ;;
     strange-branches-*9x16*.png|strange-branches-*16x9-start.png) move "$f" "02 Shorts Start Frames (9x16)" ;;
     strange-branches-*.html) move "$f" "03 Title Screen Pages" ;;
-    0[0-7]-*.md) move "$f" "05 Docs & Scripts" ;;
+    0[0-9]-*.md) move "$f" "05 Docs & Scripts" ;;
+    bill-dingus-intro-*.mp4|bill-dingus-outro-*.mp4) move "$f" "10 Bill Dingus Intro & Outro" ;;
+    bill-dingus-*.mp4|bill-dingus-*.webm) move "$f" "11 Bill Dingus Reactions" ;;
+    strange-branches-*-strain-*.mp4|strange-branches-*-wrath-*.mp4|strange-branches-*-lunge-*.mp4|strange-branches-*-sequence-*.mp4|strange-branches-eye-*.mp4) move "$f" "09 Shot Clips" ;;
   esac
 done
 
