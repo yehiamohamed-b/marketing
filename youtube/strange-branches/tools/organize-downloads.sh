@@ -46,6 +46,7 @@ for f in *; do
   [ -f "$f" ] || continue
   case "$f" in
     strange-branches-*-loop.mp4|strange-branches-*-loop.gif) move "$f" "01 Title Loops (16x9)" ;;
+    strange-branches-*-strain-*.mp4|strange-branches-*-wrath-*.mp4|strange-branches-*-lunge-*.mp4|strange-branches-*-sequence-*.mp4) move "$f" "09 Shot Clips" ;;
     strange-branches-logo-*.png|strange-branches-banner-*.png) move "$f" "04 Branding (logo + banner)" ;;
     strange-branches-*9x16*.png|strange-branches-*16x9-start.png) move "$f" "02 Shorts Start Frames (9x16)" ;;
     strange-branches-*.html) move "$f" "03 Title Screen Pages" ;;
