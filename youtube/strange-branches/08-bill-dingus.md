@@ -6,7 +6,8 @@ Bill Dingus is the power source of every world Strange Branches creates or disse
 | Element | Look | Inspired by |
 |---|---|---|
 | Silhouette | Tall, slender, pure black humanoid | Mob at 100% (Mob Psycho 100) |
-| Hair | Spiky **black flame mane** rising off his head, with white highlight streaks and a white glow rim | Mob's hair at 100% |
+| Hair | A huge billowing **white cloud mane** with an ink outline and soft curls. It grows as his power rises, billows bigger when he's shocked and droops when he facepalms | God's cloud hair (Versus) |
+| Hands | Silhouette hands: palm, four fingers and a thumb. Poses: relaxed, open, splayed, cupped, fist, finger-gun | Original |
 | Eyes | Two glowing white dots, no mouth. Expressions: dots (neutral), slits (thinking), cut-off brows (angry), arcs ^ ^ (happy/waving) | Mob at 100% |
 | Skin | Black-and-white maze bands that slowly flow. **Lore:** they are living contour maps of the worlds he has made | God's markings (Versus) |
 | Power | A white light sphere behind him, with **matter** (glowing white and amber specks) and **dark matter** (black orbs with violet rims) orbiting him; ink flakes peel off his body | Mob at 100% |
@@ -14,7 +15,7 @@ Bill Dingus is the power source of every world Strange Branches creates or disse
 
 **Background beings** (far away, slow): a dark-purple jellyfish, a greenish star serpent, a white ring watcher with one slit eye.
 
-**Type:** Audiowide for every title (STRANGE BRANCHES, the tagline, BILL DINGUS).
+**Type:** Black Ops One (stencil) for every title, in **deep violet**. Title `#7b3fe4` with drop `#14062a`, tagline `#9a6cf0`, BILL DINGUS `#3d1580`. A matrix-green palette also exists in the code (`palette: 'green'`).
 **Palette:** ink `#0b0b0d`, paper `#f6f5ef`, cream `#efe6cf`, amber `#e0a020`, violet `#8a4fd8`, star green `#5fe0a0`, logo green `#1f4a35`.
 
 ## Intro (10 s)
@@ -37,7 +38,10 @@ He stands in the light with matter orbiting him, above **BILL DINGUS** and "NEW 
 |---|---|---|
 | **Thinking** (seamless loop) | Hand on chin, narrowed eyes looking up; his markings swirl faster; matter orbits his head; an amber "…" pulses | Posing a what-if, or a "but then…" pause |
 | **Frustrated** (seamless loop) | Fists clenched and trembling, angry eyes, flames flaring, ink bursting off him, a pulsing anger mark | A theory falls apart, or a fan favourite gets dunked on |
-| **Spirit Gun** (one-shot) | Points his index finger; it charges violet and amber; a beam fires; impact frames; two galaxies are blown apart with ripples | Destroying a bad idea, or a dramatic "nope" |
+| **Spirit Gun** (one-shot) | One-handed finger-gun with the other hand free; the tip charges violet and amber; a beam fires; impact frames; two galaxies are blown apart with ripples | Destroying a bad idea, or a dramatic "nope" |
+| **Laughing** (seamless loop) | Shoulders bouncing, hand on his belly, ^ ^ eyes, purple "HA"s floating up | A joke lands, or an absurd idea |
+| **Shocked** (one-shot) | Snaps back, both hands up with fingers splayed, wide eyes, shock lines, hair bursts out | A twist reveal |
+| **Facepalm** (seamless loop) | His palm covers one eye, the head sways, the hair droops, a sigh puff drifts out | A bad take, or a dumb design in nature |
 
 Each clip comes in four versions: **16:9 and 9:16**, each as a **full scene** and as an **overlay**. The overlay is a green-screen MP4 (use CapCut's Chroma key) plus a transparent WebM.
 
@@ -55,4 +59,7 @@ Each clip comes in four versions: **16:9 and 9:16**, each as a **full scene** an
   - 8 s: one low synth note.
 - **Spirit Gun:** a rising charge whine, then a "pew" crack at 1.2 s, then a boom at 1.62 s.
 - **Thinking:** a soft hum.
+- **Laughing:** a deep echoing chuckle.
+- **Shocked:** a record scratch into a sting.
+- **Facepalm:** a slap, then a long sigh.
 - **Frustrated:** a low growl with a heartbeat.

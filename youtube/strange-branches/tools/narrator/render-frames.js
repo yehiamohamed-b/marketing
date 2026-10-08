@@ -8,7 +8,7 @@ const { chromium } = require('playwright'); const fs = require('fs');
   for (const j of jobs) {
     const dir = `${out}/${j.name}`; fs.mkdirSync(dir, { recursive: true }); const ext = j.overlay ? 'png' : 'jpg';
     for (const t of j.times) {
-      const d = await p.evaluate(([t, m, w, h, o, ext]) => { const c = document.getElementById('cv'); NARRATOR.render(c, t, m, w, h, { overlay: o }); return ext === 'png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.93); }, [t, j.mode, j.w, j.h, !!j.overlay, ext]);
+      const d = await p.evaluate(([t, m, w, h, o, ext, PAL]) => { const c = document.getElementById('cv'); NARRATOR.render(c, t, m, w, h, { overlay: o, palette: PAL }); return ext === 'png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.93); }, [t, j.mode, j.w, j.h, !!j.overlay, ext, j.palette || 'purple']);
       fs.writeFileSync(`${dir}/f${String(Math.round(t * 24)).padStart(4, '0')}.${ext}`, Buffer.from(d.split(',')[1], 'base64'));
     }
     console.log('done', j.name);

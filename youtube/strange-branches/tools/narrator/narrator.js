@@ -39,7 +39,7 @@
       ts: 2.0 + rnd() * 1.8, dur: 1.3 + rnd() * 1.2, front: rnd() < 0.25, ph: rnd() * TAU, speed: 900 + rnd() * 800 };
   });
   const BITS = Array.from({ length: 46 }, () => ({ a: rnd() * TAU, r: 150 + rnd() * 280, s: 2 + rnd() * 5, d: rnd() * 0.5, dark: rnd() < 0.3 }));
-  const FLAMES = Array.from({ length: 13 }, (_, i) => { const u = i / 12; return { base: -Math.PI + 0.25 + u * (Math.PI - 0.5), len: 150 + rnd() * 120 + (1 - Math.abs(u - 0.5) * 2) * 90, w: 38 + rnd() * 16, lean: (u - 0.5) * 0.9, ph: rnd() * TAU, k: 2 + rnd() * 2 }; });
+  const STRANDS = Array.from({ length: 7 }, (_, i) => ({ a: -Math.PI / 2 + (i / 6 - 0.5) * 3.0 + (rnd() - 0.5) * 0.2, len: 130 + rnd() * 120 - Math.abs(i - 3) * 8, r0: 56 + rnd() * 12, curl: 0.5 + rnd() * 0.5, ph: rnd() * TAU, jit: Array.from({ length: 14 }, () => [(rnd() - 0.5) * 1.1, 0.7 + rnd() * 0.6]) }));
   const CRACKS = Array.from({ length: 14 }, () => { let x = (rnd() - 0.5) * 1300, y = 312 + rnd() * 120; const pts = [[x, y]]; for (let k = 0; k < 5; k++) { x += (rnd() - 0.5) * 120; y += rnd() * 22; pts.push([x, y]); } return pts; });
   const LAND = Array.from({ length: 6 }, () => ({ a: rnd() * TAU, lat: (rnd() - 0.5) * 1.4, r: 0.25 + rnd() * 0.3 }));
   const SPEED = Array.from({ length: 70 }, () => [rnd() * TAU, 0.25 + rnd() * 0.5, 1 + rnd() * 5]);
@@ -49,7 +49,7 @@
   // ---------- figure ----------
   const SH_R = [70, -174], SH_L = [-70, -174];
   const armA = (sh, ua, fa, L1 = 114, L2 = 102) => { const e = [sh[0] + Math.cos(ua) * L1, sh[1] + Math.sin(ua) * L1], w = [e[0] + Math.cos(fa) * L2, e[1] + Math.sin(fa) * L2]; return { e, w, h: [w[0] + Math.cos(fa) * 26, w[1] + Math.sin(fa) * 26] }; };
-  const mixArm = (A, B, u) => ({ e: [lerp(A.e[0], B.e[0], u), lerp(A.e[1], B.e[1], u)], w: [lerp(A.w[0], B.w[0], u), lerp(A.w[1], B.w[1], u)], h: [lerp(A.h[0], B.h[0], u), lerp(A.h[1], B.h[1], u)], f: B.f && u > 0.5 ? B.f : A.f });
+  const mixArm = (A, B, u) => ({ e: [lerp(A.e[0], B.e[0], u), lerp(A.e[1], B.e[1], u)], w: [lerp(A.w[0], B.w[0], u), lerp(A.w[1], B.w[1], u)], h: [lerp(A.h[0], B.h[0], u), lerp(A.h[1], B.h[1], u)], pose: u > 0.5 ? B.pose : A.pose, front: u > 0.5 ? B.front : A.front });
   const REST_R = s => armA(SH_R, 1.41 - 0.1 * s, 1.51 - 0.2 * s), REST_L = s => armA(SH_L, Math.PI - 1.41 + 0.1 * s, Math.PI - 1.51 + 0.2 * s);
   function capsule(c, a, b, wa, wb) {
     const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
@@ -57,49 +57,84 @@
     c.beginPath(); c.arc(a[0], a[1], wa / 2, 0, TAU); c.fill(); c.beginPath(); c.arc(b[0], b[1], wb / 2, 0, TAU); c.fill();
   }
   function smoothClosed(c, pts) { c.beginPath(); const n = pts.length; for (let i = 0; i < n; i++) { const p = pts[i], q = pts[(i + 1) % n], m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2]; if (i === 0) c.moveTo(m[0], m[1]); else c.quadraticCurveTo(p[0], p[1], m[0], m[1]); } const p = pts[0], q = pts[1]; c.quadraticCurveTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2); c.closePath(); }
+  // silhouette hands: palm + four fingers + thumb, posed per gesture
+  function handFrame(A) {
+    const w = A.w, dx = A.h[0] - w[0], dy = A.h[1] - w[1], L = Math.hypot(dx, dy) || 1, u = [dx / L, dy / L];
+    let v = [-u[1], u[0]]; if (v[0] * -w[0] + v[1] * (-110 - w[1]) < 0) v = [-v[0], -v[1]];
+    const HS = 1.35, P = (a, b) => [w[0] + (u[0] * a + v[0] * b) * HS, w[1] + (u[1] * a + v[1] * b) * HS], D = th => [u[0] * Math.cos(th) + v[0] * Math.sin(th), u[1] * Math.cos(th) + v[1] * Math.sin(th)];
+    return { u, v, P, D };
+  }
+  function handTip(A) { const { P } = handFrame(A); return A.pose === 'point' ? P(43, 6) : P(30, 0); }
+  function hand(c, A) {
+    const { v, P, D } = handFrame(A), HS = 1.35, pose = A.pose || 'relaxed', fing = (b, d, l, wd) => capsule(c, b, [b[0] + d[0] * l * HS, b[1] + d[1] * l * HS], wd * HS, wd * 0.82 * HS);
+    if (pose === 'fist' || pose === 'point') {
+      capsule(c, P(-2, 0), P(13, 0), 20 * HS, 23 * HS); for (let i = 0; i < 4; i++) { c.beginPath(); const k = P(16, (i - 1.5) * 4.8); c.arc(k[0], k[1], 3.8 * HS, 0, TAU); c.fill(); }
+      if (pose === 'point') { fing(P(15, 6), D(0), 28, 5.4); const up = v[1] < 0 ? 1 : -1; fing(P(5, 3 * up), D(up * Math.PI / 2), 14, 5.8); }
+      else fing(P(6, 9), D(-0.9), 9, 6);
+      return;
+    }
+    capsule(c, P(0, 0), P(15, 0), 17 * HS, 19 * HS);
+    const spec = { relaxed: [15, 0.06, 0.55, 11], open: [21, 0.2, 1.15, 15], splay: [23, 0.33, 1.4, 16], cup: [16, 0.12, 0.9, 12] }[pose] || [15, 0.06, 0.55, 11];
+    for (let i = 0; i < 4; i++) fing(P(15, (i - 1.5) * 4.4), D((i - 1.5) * spec[1]), spec[0] * (i === 0 || i === 3 ? 0.85 : 1), 4.8);
+    fing(P(4, 7.5), D(spec[2]), spec[3], 5.8);
+  }
   function body(c, P) {
     smoothClosed(c, [[-76, -182], [-66, -140], [-46, -72], [-36, -36], [-50, 8], [-30, 36], [0, 48], [30, 36], [50, 8], [36, -36], [46, -72], [66, -140], [76, -182], [22, -198], [-22, -198]]); c.fill();
     capsule(c, [0, -216], [0, -186], 24, 32);
     for (const s of [-1, 1]) { capsule(c, [s * 26, 10], [s * 29, 150], 42, 25); capsule(c, [s * 29, 150], [s * 27, 286], 25, 14); c.beginPath(); c.ellipse(s * 31, 294, 15, 7, 0, 0, TAU); c.fill(); }
-    for (const [A, sh] of [[P.R, SH_R], [P.L, SH_L]]) { capsule(c, sh, A.e, 33, 24); capsule(c, A.e, A.w, 24, 15); capsule(c, A.w, A.h, 18, 13); if (A.f) capsule(c, A.h, A.f, 8, 6); }
+    for (const [A, sh] of [[P.R, SH_R], [P.L, SH_L]]) { capsule(c, sh, A.e, 33, 24); capsule(c, A.e, A.w, 24, 15); if (!A.front) hand(c, A); }
   }
 
   // ---------- main render ----------
   const mask = document.createElement('canvas'), pat = document.createElement('canvas'), small = document.createElement('canvas');
+  const PALETTES = { green: { main: '#4dff88', drop: '#0a3a1c', glow: 'rgba(0,255,90,0.55)', tag: '#86ffae', line: '#2fd36a', name: '#0f7a3a' },
+    purple: { main: '#7b3fe4', drop: '#14062a', glow: 'rgba(110,50,220,0.5)', tag: '#9a6cf0', line: '#5a2aa6', name: '#3d1580' } };
   function render(cv, t, mode, W, H, opts = {}) {
+    const TC = PALETTES[opts.palette || 'purple'];
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
     for (const k of [mask, pat]) if (k.width !== W || k.height !== H) { k.width = W; k.height = H; }
     const c = cv.getContext('2d'), port = H > W, intro = mode === 'intro', outro = mode === 'outro', overlay = !!opts.overlay;
-    const scen = !intro && !outro, LP = (mode === 'think' || mode === 'frustrated') ? 4 : 0;
+    const scen = !intro && !outro, LP = ['think', 'frustrated', 'laugh', 'facepalm'].includes(mode) ? 4 : 0;
     const wq = k => LP ? Math.max(1, Math.round(k * LP / TAU)) * TAU / LP : k;   // loop-safe angular speed
     const sn = (k, ph = 0) => Math.sin(t * wq(k) + ph);
 
     // ---- per-mode state ----
-    let power = 1, eyes = 1, eyeStyle = 'dot', look = [0, 0], world = 0, squeeze = 0, blastT = -1, dark = 0, sphereR = 500, shake = 0, flare = 1, flakeK = 1;
+    let power = 1, eyes = 1, eyeStyle = 'dot', look = [0, 0], world = 0, squeeze = 0, blastT = -1, dark = 0, sphereR = 500, shake = 0, flare = 1, flakeK = 1, hairK = 1, hairDroop = 0, hoverX = 0, swayX = 0, shockS = 0, laughB = 0;
     let R = REST_R(0.8), L = REST_L(0.8), impactAt = -1;
     if (intro) {
       eyes = ease((t - 0.2) / 0.6); power = easeOut((t - 1.0) / 1.0); sphereR = power * 470 + ease((t - 2) / 8) * 50;
-      const raise = ease((t - 4.2) / 0.8); R = mixArm(REST_R(power * 0.8), armA(SH_R, 0.62, -1.13), raise); L = REST_L(power * 0.8);
+      const raise = ease((t - 4.2) / 0.8); R = mixArm(REST_R(power * 0.8), armA(SH_R, 0.62, -1.13), raise); L = REST_L(power * 0.8); R.pose = raise > 0.5 ? (ease((t - 6.4) / 0.45) > 0.3 ? 'fist' : 'cup') : 'relaxed';
       world = easeOut((t - 5.0) / 1.2); squeeze = ease((t - 6.4) / 0.45); impactAt = 6.95; blastT = t >= 6.95 ? t - 6.95 : -1; dark = ease((t - 7.55) / 0.5);
     } else if (outro) {
       eyes = ease((t - 0.1) / 0.6) * (1 - ease((t - 9.15) / 0.45)); power = easeOut((t - 0.6) / 0.9) * (1 - easeIn((t - 8.2) / 1.0)); sphereR = power * 500;
       const up = ease((t - 5.3) / 0.5) * (1 - ease((t - 7.4) / 0.5)), wave = Math.sin((t - 5.8) * TAU * 1.6) * 0.38 * ease((t - 5.8) / 0.2) * (1 - ease((t - 7.2) / 0.2));
-      R = mixArm(REST_R(0.8 * power), armA(SH_R, -0.45, -1.45 + wave), up); L = REST_L(0.8 * power);
+      R = mixArm(REST_R(0.8 * power), armA(SH_R, -0.45, -1.45 + wave), up); L = REST_L(0.8 * power); R.pose = up > 0.4 ? 'open' : 'relaxed';
       if (up > 0.5) eyeStyle = 'happy';
     } else if (mode === 'think') {
       const bob = sn(TAU / 4) * 3;
       R = { e: [64, -82 + bob], w: [24, -196 + bob], h: [14, -214 + bob] }; L = { e: [-78, -84], w: [30, -92 + bob * 0.5], h: [56, -90 + bob * 0.5] };
-      eyeStyle = 'narrow'; look = [-3.5, -2.5]; flare = 0.7;
+      eyeStyle = 'narrow'; look = [-3.5, -2.5]; flare = 0.7; R.pose = 'fist';
     } else if (mode === 'frustrated') {
       const tr = sn(TAU * 6) * 2.2; R = { e: [100, -76 + tr], w: [108, 24 + tr], h: [109, 44 + tr] }; L = { e: [-100, -76 - tr], w: [-108, 24 - tr], h: [-109, 44 - tr] };
-      eyeStyle = 'angry'; shake = 2.6; flare = 1.2; flakeK = 2.2;
+      eyeStyle = 'angry'; shake = 2.6; flare = 1.2; flakeK = 2.2; R.pose = L.pose = 'fist'; hairK = 1.08 + 0.05 * sn(TAU * 3);
     } else if (mode === 'spiritgun') {
       const a = port ? -0.95 : -0.06, aim = ease(t / 0.45), kick = 0.12 * after(t, 1.2, 6), ak = a - kick, dk = [Math.cos(ak), Math.sin(ak)];
-      const e = [SH_R[0] + dk[0] * 114, SH_R[1] + dk[1] * 114], w = [e[0] + dk[0] * 102, e[1] + dk[1] * 102], h = [w[0] + dk[0] * 24, w[1] + dk[1] * 24], f = [h[0] + dk[0] * 30, h[1] + dk[1] * 30];
-      R = mixArm(REST_R(0.8), { e, w, h, f }, aim);
-      const M = [lerp(e[0], w[0], 0.55), lerp(e[1], w[1], 0.55) + 6];
-      L = mixArm(REST_L(0.8), { e: [-34, -86], w: [M[0] - dk[0] * 8, M[1] - dk[1] * 8], h: [M[0] + 4, M[1] + 4] }, aim);
-      eyeStyle = t > 0.9 && t < 2.6 ? 'angry' : 'dot'; shake = 3 * after(t, 1.2, 5); impactAt = 1.62;
+      const e = [SH_R[0] + dk[0] * 114, SH_R[1] + dk[1] * 114], w = [e[0] + dk[0] * 102, e[1] + dk[1] * 102], h = [w[0] + dk[0] * 24, w[1] + dk[1] * 24];
+      R = mixArm(REST_R(0.8), { e, w, h, pose: 'point' }, aim);
+      L = { ...REST_L(0.8), pose: 'relaxed' };
+      eyeStyle = t > 0.9 && t < 2.6 ? 'angry' : 'dot'; shake = 3 * after(t, 1.2, 5); impactAt = 1.62; hairK = 1 + 0.25 * easeOut((t - 0.6) / 0.6) * (1 - ease((t - 2.4) / 1.2));
+    }
+    else if (mode === 'laugh') {
+      const b = Math.abs(sn(TAU * 2)); laughB = b;
+      R = { e: [100, -98 + b * 3], w: [44, -52 + b * 3], h: [22, -40 + b * 3], pose: 'open' }; L = { ...armA(SH_L, Math.PI - 1.25, Math.PI - 1.15 + 0.1 * b), pose: 'relaxed' };
+      eyeStyle = 'happy'; look = [0, -3]; hairK = 1 + 0.06 * b; hoverX = -8 * b;
+    } else if (mode === 'shocked') {
+      const k = ease((t - 0.3) / 0.12), tr = k * Math.sin(t * 70) * 0.02; shockS = k;
+      R = mixArm(REST_R(0.8), { ...armA(SH_R, -0.25 + tr, -1.2 + tr), pose: 'splay' }, k); L = mixArm(REST_L(0.8), { ...armA(SH_L, Math.PI + 0.25 - tr, Math.PI + 1.2 - tr), pose: 'splay' }, k);
+      eyeStyle = k > 0.5 ? 'wide' : 'dot'; hairK = 1 + 0.45 * k + 0.04 * k * Math.sin(t * 20); shake = 1.4 * k + 5 * after(t, 0.3, 6); hoverX = -10 * k;
+    } else if (mode === 'facepalm') {
+      R = { e: [100, -112], w: [30, -228], h: [18, -254], pose: 'open', front: true }; L = { e: [-82, -92], w: [46, -104], h: [70, -106], pose: 'relaxed' };
+      swayX = 3 * sn(TAU * 0.5); hairK = 0.8; hairDroop = 0.55; flakeK = 0.6;
     }
     if (scen) power = 1;
 
@@ -109,9 +144,9 @@
     const S = sc * z, O = [W / 2, port ? H * 0.47 : H * 0.5], C = [0, intro ? -60 : outro ? -20 : port ? -90 : -40];
     const shk = 10 * ip + shake, sx = shk * Math.sin(t * 91), sy = shk * Math.sin(t * 77);
     const T = () => c.setTransform(S, 0, 0, S, O[0] - S * C[0] + sx, O[1] - S * C[1] + sy);
-    const hover = -6 * sn(1.3) * power;
-    const HC = [0, -262 + hover], SC = [0, -110], sR = port ? sphereR * 0.8 : sphereR;
-    const tip = R.f ? [R.f[0], R.f[1] + hover] : [R.h[0], R.h[1] + hover];
+    const hover = -6 * sn(1.3) * power + hoverX;
+    const BXh = shake * Math.sin(t * wq(TAU * 7)) + swayX, HC = [0, -262 + hover], SC = [0, -110], sR = port ? sphereR * 0.8 : sphereR;
+    const tp = handTip(R), tip = [tp[0], tp[1] + hover];
     const GAL = port ? [[220, -560, 1.0], [80, -680, 0.7]] : [[690, -290, 1.45], [830, -60, 0.95]], HIT = 1.62, FIRE = 1.2;
 
     // ---- background: space, entities, light sphere, ground ----
@@ -152,28 +187,23 @@
       }); c.globalAlpha = 1;
     };
     drawMatter(false);
-    // ---- flame mane (Mob-style, rising white fire) ----
-    const flames = FLAMES.map(f => {
-      const hp = easeOut(power), fl = flare * (1 + (mode === 'frustrated' ? 0.25 * Math.sin(t * wq(TAU * 3) + f.ph) : 0));
-      const pts = [], n = 12; let x = HC[0] + Math.cos(f.base) * 34, y = HC[1] + Math.sin(f.base) * 36 + 4;
-      for (let k = 0; k < n; k++) { const u = k / (n - 1), up = -Math.PI / 2 + f.lean * (1 - u * 0.6), a = lerp(f.base, up, Math.min(1, u * 2.2 + 0.25)) + 0.16 * Math.sin(u * 5 - t * wq(f.k * 1.6) + f.ph) * u;
-        const step = f.len * hp * fl * (0.85 + 0.15 * Math.sin(t * wq(f.k * 2.1) + f.ph)) / n; x += Math.cos(a) * step; y += Math.sin(a) * step; pts.push([x, y, f.w * (0.45 + 0.55 * hp) * Math.pow(1 - u, 0.85) * (1 + 0.12 * Math.sin(u * 9 + t * wq(4) + f.ph))]); }
-      return pts;
-    });
-    const maneShape = grow => {
-      c.beginPath(); c.ellipse(HC[0], HC[1] - 12, 46 + grow, 40 + grow, 0, 0, TAU); c.fill();
-      flames.forEach(pts => { const Lp = [], Rp = []; pts.forEach(([x, y, w], k) => { const q = pts[Math.min(k + 1, pts.length - 1)], p0 = pts[Math.max(k - 1, 0)], dx = q[0] - p0[0], dy = q[1] - p0[1], Ln = Math.hypot(dx, dy) || 1, nx = -dy / Ln, ny = dx / Ln, ww = w + grow * (1 - k / pts.length); Lp.push([x + nx * ww, y + ny * ww]); Rp.push([x - nx * ww, y - ny * ww]); });
-        const a = pts[pts.length - 1], b = pts[pts.length - 2], tp = [a[0] + (a[0] - b[0]) * 1.6, a[1] + (a[1] - b[1]) * 1.6 - grow];
-        c.beginPath(); Lp.forEach((p, k) => k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.lineTo(tp[0], tp[1]); for (let k = Rp.length - 1; k >= 0; k--) c.lineTo(Rp[k][0], Rp[k][1]); c.closePath(); c.fill(); });
-    };
+    // ---- hair: the original white cloud mane ----
+    let hairShape = () => {};
     if (power > 0.01) {
-      c.save(); c.shadowColor = 'rgba(255,255,255,0.9)'; c.shadowBlur = 22 * S; c.fillStyle = 'rgba(250,248,240,0.55)'; maneShape(7); c.restore();
-      c.fillStyle = INK; maneShape(0);
-      c.strokeStyle = 'rgba(245,243,235,0.75)'; c.lineWidth = 2.4; c.lineCap = 'round'; // white highlight streaks inside the black flames
-      flames.forEach((pts, i) => { c.beginPath(); pts.slice(3, 10).forEach(([x, y, w], k) => { const o = (i % 2 ? 0.35 : -0.3) * w; k ? c.lineTo(x + o, y) : c.moveTo(x + o, y); }); c.stroke(); });
+      const hp = easeOut(power) * hairK;
+      const strands = STRANDS.map(g => { const pts = []; let x = HC[0] + BXh, y = HC[1] + 6, a = g.a; const n = 14, tgt = g.a < -Math.PI / 2 ? -1.5 * Math.PI : Math.PI / 2;
+        for (let k = 0; k < n; k++) { const u = k / (n - 1); a = g.a + g.curl * u + 0.22 * Math.sin(u * 4 - t * wq(1.8) + g.ph) * u + 0.25 * u * Math.sin(t * wq(0.6)); a = lerp(a, tgt, hairDroop * Math.min(1, u * 1.6)); const step = g.len * hp / n; x += Math.cos(a) * step; y += Math.sin(a) * step * 1.1;
+          const r = g.r0 * (1 - 0.72 * u) * (0.4 + 0.6 * hp) * g.jit[k][1] * (1 + 0.08 * Math.sin(t * wq(2.2) + k + g.ph)); pts.push([x - Math.sin(a) * r * g.jit[k][0], y + Math.cos(a) * r * g.jit[k][0], r]); }
+        return pts; });
+      const shape = grow => { for (const [dx, dy, rr] of [[0, -20, 62], [-48, 0, 46], [48, 0, 46], [-30, -50, 50], [30, -50, 50]]) { c.beginPath(); c.arc(HC[0] + BXh + dx * hp, HC[1] + dy * hp, rr * (0.5 + 0.5 * hp) + grow, 0, TAU); c.fill(); } strands.forEach(pts => pts.forEach(([x, y, r]) => { c.beginPath(); c.arc(x, y, r + grow, 0, TAU); c.fill(); })); };
+      hairShape = (col, grow) => { c.fillStyle = col; shape(grow); };
+      c.fillStyle = INK; shape(5); c.fillStyle = PAPER; shape(0);
+      c.save(); c.globalAlpha = 0.1; c.fillStyle = '#6a6a70'; strands.forEach(pts => pts.forEach(([x, y, r], k) => { if (k % 2) return; c.beginPath(); c.arc(x + r * 0.15, y + r * 0.35, r * 0.62, 0, TAU); c.fill(); })); c.restore();
+      c.strokeStyle = 'rgba(30,30,36,0.5)'; c.lineWidth = 2; c.lineCap = 'round';
+      strands.forEach(pts => pts.forEach(([x, y, r], k) => { if (k % 3 !== 1) return; c.beginPath(); c.arc(x - r * 0.1, y + r * 0.05, r * 0.5, 0.3 + k, 2.1 + k); c.stroke(); }));
     }
     // ---- body: black silhouette with flowing contour maps ----
-    const P = { R, L }, BX = shake * Math.sin(t * wq(TAU * 7)), BY = hover;
+    const P = { R, L }, BX = BXh, BY = hover;
     const mc = mask.getContext('2d'); mc.setTransform(1, 0, 0, 1, 0, 0); mc.clearRect(0, 0, W, H); mc.setTransform(S, 0, 0, S, O[0] - S * C[0] + sx + BX * S, O[1] - S * C[1] + sy + BY * S); mc.fillStyle = '#000'; body(mc, P);
     c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(mask, 0, 0);
     const bx0 = Math.max(0, Math.floor(O[0] + S * (-300 - C[0]) + sx)), bx1 = Math.min(W, Math.ceil(O[0] + S * (330 - C[0]) + sx)), by0 = Math.max(0, Math.floor(O[1] + S * (-250 - C[1] + hover) + sy)), by1 = Math.min(H, Math.ceil(O[1] + S * (310 - C[1] + hover) + sy));
@@ -198,13 +228,22 @@
         c.save(); c.shadowColor = 'rgba(255,255,255,0.95)'; c.shadowBlur = 26 * S * glow; c.fillStyle = '#fff'; c.strokeStyle = '#fff'; c.globalAlpha = eyes;
         if (eyeStyle === 'happy') { c.lineWidth = 3.4; c.lineCap = 'round'; c.beginPath(); c.arc(x0, y0 + 4, 6, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); c.stroke(); }
         else {
-          if (eyeStyle === 'angry') { c.beginPath(); c.moveTo(x0 - 9, y0 - 3 - s * 4.5); c.lineTo(x0 + 9, y0 - 3 + s * 4.5); c.lineTo(x0 + 9, y0 + 12); c.lineTo(x0 - 9, y0 + 12); c.closePath(); c.clip(); }
-          c.beginPath(); c.ellipse(x0, y0, 5.4, 7 * eyes * (eyeStyle === 'narrow' ? 0.42 : 1), 0, 0, TAU); c.fill(); c.fill();
+          if (eyeStyle === 'angry') { c.beginPath(); c.moveTo(x0 - 9, y0 - 3 + s * 4.5); c.lineTo(x0 + 9, y0 - 3 - s * 4.5); c.lineTo(x0 + 9, y0 + 12); c.lineTo(x0 - 9, y0 + 12); c.closePath(); c.clip(); }
+          const wd = eyeStyle === 'wide' ? 1.6 : 1; c.beginPath(); c.ellipse(x0 + (wd > 1 ? s * 2 : 0), y0, 5.4 * wd, 7 * wd * eyes * (eyeStyle === 'narrow' ? 0.42 : 1), 0, 0, TAU); c.fill(); c.fill();
         }
         c.restore();
       }
     };
     drawEyes();
+    if (R.front) { // facepalm: the hand covers the face, a sigh drifts out
+      c.save(); c.translate(BX, hover); c.fillStyle = '#060607'; capsule(c, R.e, R.w, 24, 15); hand(c, R); c.restore();
+      const q = frac(t / 2), sx2 = BX - 30 - 40 * q, sy2 = -214 + hover + 10 * q; c.fillStyle = `rgba(235,235,240,${0.7 * (1 - q) * ease(q * 5)})`; c.strokeStyle = `rgba(11,11,13,${0.6 * (1 - q) * ease(q * 5)})`; c.lineWidth = 2;
+      for (const [dx, dy, r] of [[0, 0, 10], [-12, 4, 8], [-22, -2, 6]]) { c.beginPath(); c.arc(sx2 + dx * (1 + q), sy2 + dy, r * (0.6 + q), 0, TAU); c.fill(); c.stroke(); }
+    }
+    if (mode === 'shocked' && shockS > 0) { c.strokeStyle = INK; c.lineCap = 'round'; c.globalAlpha = shockS; c.lineWidth = 4;
+      for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + (k - 2.5) * 0.42, r0 = 74 + 4 * Math.sin(t * 30 + k); c.beginPath(); c.moveTo(BX + Math.cos(a) * r0, -262 + hover + Math.sin(a) * r0 * 1.1); c.lineTo(BX + Math.cos(a) * (r0 + 22), -262 + hover + Math.sin(a) * (r0 + 22) * 1.1); c.stroke(); } c.globalAlpha = 1; }
+    if (mode === 'laugh') { c.save(); c.font = '30px BlackOps'; c.textAlign = 'center'; c.fillStyle = TC.main; c.shadowColor = TC.glow; c.shadowBlur = 10 * S;
+      for (let k = 0; k < 3; k++) { const q = frac(t / (4 / 3) + k / 3); c.globalAlpha = Math.sin(q * Math.PI); c.fillText('HA', BX + 70 + 34 * Math.sin(k * 2.1 + q * 3), -300 + hover - 110 * q); } c.restore(); }
     // ---- ink flakes peeling off (Mob-style aura) ----
     if (power > 0.05) {
       const segs = [[SH_R, R.e, 33], [R.e, R.w, 24], [SH_L, L.e, 33], [L.e, L.w, 24], [[-50, -150], [-36, -40], 10], [[50, -150], [36, -40], 10], [[-26, 10], [-29, 150], 42], [[26, 10], [29, 150], 42], [[-29, 150], [-27, 286], 25], [[29, 150], [27, 286], 25]];
@@ -264,35 +303,35 @@
       const IC = intro ? HP : [GAL[0][0], GAL[0][1]];
       c.setTransform(1, 0, 0, 1, 0, 0);
       if (fi === 0) { c.globalCompositeOperation = 'difference'; c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'source-over'; }
-      else { c.fillStyle = fi === 1 ? '#ffffff' : AMBER; c.fillRect(0, 0, W, H); c.drawImage(mask, 0, 0); T(); c.fillStyle = INK; maneShape(5); c.beginPath(); c.ellipse(BX, -252 + hover, 34, 44, 0, 0, TAU); c.fill(); drawEyes(); c.setTransform(1, 0, 0, 1, 0, 0); }
+      else { c.fillStyle = fi === 1 ? '#ffffff' : AMBER; c.fillRect(0, 0, W, H); c.drawImage(mask, 0, 0); T(); hairShape(INK, 4); c.beginPath(); c.ellipse(BX, -252 + hover, 34, 44, 0, 0, TAU); c.fill(); drawEyes(); c.setTransform(1, 0, 0, 1, 0, 0); }
       T(); c.strokeStyle = fi === 0 ? '#ffffff' : INK; c.lineCap = 'round';
       SPEED.forEach(([a, r0, w]) => { c.lineWidth = w * 2; c.beginPath(); c.moveTo(IC[0] + Math.cos(a) * r0 * 700, IC[1] + Math.sin(a) * r0 * 700); c.lineTo(IC[0] + Math.cos(a) * 2400, IC[1] + Math.sin(a) * 2400); c.stroke(); });
     }
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (intro && fi > 2) { const fl = after(t, 7.075, 6) * 0.7; if (fl > 0.01) { c.fillStyle = `rgba(255,253,245,${fl})`; c.fillRect(0, 0, W, H); } }
     if (dark > 0) { c.fillStyle = `rgba(5,5,6,${dark})`; c.fillRect(0, 0, W, H); T(); drawEyes(); c.setTransform(1, 0, 0, 1, 0, 0); }
-    // ---- titles (Audiowide) ----
+    // ---- titles (Black Ops One) ----
     T(); c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    const fit = (txt, size, maxW, spacing) => { c.letterSpacing = spacing + 'px'; c.font = `${size}px Audiowide`; const w = c.measureText(txt).width; return w > maxW ? size * maxW / w : size; };
+    const fit = (txt, size, maxW, spacing) => { c.letterSpacing = spacing + 'px'; c.font = `${size}px BlackOps`; const w = c.measureText(txt).width; return w > maxW ? size * maxW / w : size; };
     if (intro && t > 7.9) {
       const rv = easeOut((t - 7.95) / 0.65), lines = port ? ['STRANGE', 'BRANCHES'] : ['STRANGE BRANCHES'], maxW = port ? 660 : 1450;
       const fs = Math.min(...lines.map(l => fit(l, port ? 130 : 120, maxW, 4))), y0 = port ? -10 : 40;
-      c.letterSpacing = '4px'; c.font = `${fs}px Audiowide`;
+      c.letterSpacing = '4px'; c.font = `${fs}px BlackOps`;
       const wmax = Math.max(...lines.map(l => c.measureText(l).width)), x0 = -wmax / 2 - 20;
       c.save(); c.beginPath(); c.rect(x0, y0 - fs * 1.1, (wmax + 40) * rv, fs * lines.length * 1.1 + 30); c.clip();
-      lines.forEach((l, i) => { const y = y0 + i * fs * 1.05; c.fillStyle = AMBER; c.globalAlpha = 0.9; c.fillText(l, 4, y + 5); c.globalAlpha = 1; c.fillStyle = CREAM; c.fillText(l, 0, y); });
+      lines.forEach((l, i) => { const y = y0 + i * fs * 1.05; c.fillStyle = TC.drop; c.fillText(l, 5, y + 6); c.shadowColor = TC.glow; c.shadowBlur = 18 * S; c.fillStyle = TC.main; c.fillText(l, 0, y); c.shadowBlur = 0; });
       c.restore();
-      if (rv < 1) { c.fillStyle = CREAM; c.fillRect(x0 + (wmax + 40) * rv - 3, y0 - fs, 5, fs * lines.length * 1.1); }
+      if (rv < 1) { c.fillStyle = TC.main; c.fillRect(x0 + (wmax + 40) * rv - 3, y0 - fs, 5, fs * lines.length * 1.1); }
       const ty = y0 + (lines.length - 1) * fs * 1.05 + 62, lw = ease((t - 8.4) / 0.5) * (port ? 520 : 640);
-      c.fillStyle = AMBER; c.fillRect(-lw / 2, ty - 24, lw, 3);
-      c.save(); c.globalAlpha = ease((t - 8.6) / 0.5); const ts = fit('EVOLUTION THAT NEVER HAPPENED', port ? 34 : 30, port ? 640 : 900, 5); c.letterSpacing = '5px'; c.font = `${ts}px Audiowide`;
-      c.shadowColor = 'rgba(224,160,32,0.9)'; c.shadowBlur = 14 * S; c.fillStyle = '#ffd47a'; c.fillText('EVOLUTION THAT NEVER HAPPENED', 0, ty + 28); c.restore();
+      c.fillStyle = TC.line; c.fillRect(-lw / 2, ty - 24, lw, 3);
+      c.save(); c.globalAlpha = ease((t - 8.6) / 0.5); const ts = fit('EVOLUTION THAT NEVER HAPPENED', port ? 34 : 30, port ? 640 : 900, 5); c.letterSpacing = '5px'; c.font = `${ts}px BlackOps`;
+      c.shadowColor = TC.glow; c.shadowBlur = 14 * S; c.fillStyle = TC.tag; c.fillText('EVOLUTION THAT NEVER HAPPENED', 0, ty + 28); c.restore();
     }
     if (outro) {
       const a = ease((t - 1.2) / 0.6) * (1 - ease((t - 8.4) / 0.6)), y = port ? 470 : 382;
-      c.save(); c.globalAlpha = a; const ns = fit('BILL DINGUS', port ? 84 : 74, port ? 680 : 900, 8); c.letterSpacing = '8px'; c.font = `${ns}px Audiowide`;
-      c.fillStyle = INK; c.fillText('BILL DINGUS', 4, y + 4); c.shadowColor = 'rgba(224,160,32,0.8)'; c.shadowBlur = 10 * S; c.fillStyle = AMBER; c.fillText('BILL DINGUS', 0, y);
-      c.shadowBlur = 0; const ss = fit('NEW BRANCH EVERY SATURDAY', port ? 30 : 24, port ? 660 : 800, 5); c.letterSpacing = '5px'; c.font = `${ss}px Audiowide`; c.fillStyle = INK; c.fillText('NEW BRANCH EVERY SATURDAY', 0, y + (port ? 56 : 46)); c.restore();
+      c.save(); c.globalAlpha = a; const ns = fit('BILL DINGUS', port ? 84 : 74, port ? 680 : 900, 8); c.letterSpacing = '8px'; c.font = `${ns}px BlackOps`;
+      c.fillStyle = INK; c.fillText('BILL DINGUS', 4, y + 4); c.shadowColor = TC.glow; c.shadowBlur = 12 * S; c.fillStyle = TC.name; c.fillText('BILL DINGUS', 0, y);
+      c.shadowBlur = 0; const ss = fit('NEW BRANCH EVERY SATURDAY', port ? 30 : 24, port ? 660 : 800, 5); c.letterSpacing = '5px'; c.font = `${ss}px BlackOps`; c.fillStyle = INK; c.fillText('NEW BRANCH EVERY SATURDAY', 0, y + (port ? 56 : 46)); c.restore();
     }
     c.letterSpacing = '0px';
     // ---- grain + vignette ----
