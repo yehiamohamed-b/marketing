@@ -47,7 +47,8 @@ for f in *; do
   case "$f" in
     strange-branches-*-loop.mp4|strange-branches-*-loop.gif) move "$f" "01 Title Loops (16x9)" ;;
     strange-branches-*-strain-*.mp4|strange-branches-*-wrath-*.mp4|strange-branches-*-lunge-*.mp4|strange-branches-*-sequence-*.mp4|strange-branches-eye-*.mp4) move "$f" "09 Shot Clips" ;;
-    strange-branches-narrator-*.mp4) move "$f" "10 Narrator Intro & Outro" ;;
+    strange-branches-narrator-*.mp4|bill-dingus-intro-*.mp4|bill-dingus-outro-*.mp4) move "$f" "10 Bill Dingus Intro & Outro" ;;
+    bill-dingus-*.mp4|bill-dingus-*.webm) move "$f" "11 Bill Dingus Reactions" ;;
     strange-branches-logo-*.png|strange-branches-banner-*.png) move "$f" "04 Branding (logo + banner)" ;;
     strange-branches-*9x16*.png|strange-branches-*16x9-start.png) move "$f" "02 Shorts Start Frames (9x16)" ;;
     strange-branches-*.html) move "$f" "03 Title Screen Pages" ;;
