@@ -24,6 +24,10 @@ fps = subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "v:0
 session = new_session("isnet-general-use")
 prev = None
 for f in sorted(glob.glob(os.path.join(raw, "*.png"))):
+    done = os.path.join(png, os.path.basename(f))
+    if os.path.exists(done):  # resume after an interrupted run
+        prev = np.asarray(Image.open(done))[..., 3].astype(np.float32)
+        continue
     out = remove(Image.open(f).convert("RGB"), session=session)
     a = np.asarray(out)[..., 3].astype(np.float32)
     if prev is not None:

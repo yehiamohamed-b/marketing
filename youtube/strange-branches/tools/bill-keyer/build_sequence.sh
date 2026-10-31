@@ -9,7 +9,7 @@ A="$K/looking-at-camera_alpha.webm"; B="$K/points-at-screen_alpha.webm"; C="$K/t
 X=0.4
 # offsets: A is 9.96 s, B is 10 s, C is 10 s
 ffmpeg -v error -y -c:v libvpx-vp9 -i "$A" -c:v libvpx-vp9 -i "$B" -c:v libvpx-vp9 -i "$C" -filter_complex "
-[0:v]format=yuva420p[a];[1:v]format=yuva420p[b];[2:v]format=yuva420p[c];
+[0:v]scale=1920:1080,setsar=1,fps=24,format=yuva420p[a];[1:v]scale=1920:1080,setsar=1,fps=24,format=yuva420p[b];[2:v]scale=1920:1080,setsar=1,fps=24,format=yuva420p[c];
 [a][b]xfade=transition=fade:duration=$X:offset=9.55[ab];
 [ab][c]xfade=transition=fade:duration=$X:offset=19.15[v];
 [0:a][1:a]acrossfade=d=$X[aa];[aa][2:a]acrossfade=d=$X[aud]" \
